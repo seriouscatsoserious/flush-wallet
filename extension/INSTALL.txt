@@ -1,7 +1,7 @@
-Flush Wallet 0.3.3 — Chrome extension, betanet preview
+Flush Wallet 0.3.4 — Chrome extension, betanet preview
 
 INSTALL
-1. Extract flush-wallet-0.3.3.zip.
+1. Extract flush-wallet-0.3.4.zip.
 2. Open chrome://extensions and enable Developer mode.
 3. Choose Load unpacked and select the extracted flush-wallet folder.
 4. Pin Flush Wallet, then create or import a recovery phrase.
@@ -57,8 +57,9 @@ from gettxout. Missing token metadata disables token spending; it is never
 guessed from a transaction's marker. Ordinary ECX sends remain available.
 
 Temporary betanet, slot 99. Mainnet, asset creation, liquidity management,
-auctions, staking and peg-out transactions are not enabled. Funded live-chain
-transfers have not been broadcast in validation.
+auctions, staking and peg-out transactions are not enabled. Public Flush betanet buys/sales,
+native/token sends and seed recovery have been verified. The default L1
+Explorer address endpoints are still unavailable.
 
 UPDATES
 Back up your recovery words privately. Replace files in the same unpacked

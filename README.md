@@ -2,11 +2,11 @@
 
 Chrome wallet for L1 ECX, ECX on Flush, and Flush assets. Recovery words, keys and transaction signing stay in the browser. Explorer is the default connection; no node download or local server is required.
 
-[Download the Chrome extension](https://github.com/seriouscatsoserious/flush-wallet/releases/tag/v0.3.3) · [Installation](https://seriouscatsoserious.github.io/flush-wallet/) · [Remaining work](https://github.com/seriouscatsoserious/flush-wallet/issues)
+[Download the Chrome extension](https://github.com/seriouscatsoserious/flush-wallet/releases/tag/v0.3.4) · [Installation](https://seriouscatsoserious.github.io/flush-wallet/) · [Remaining work](https://github.com/seriouscatsoserious/flush-wallet/issues)
 
 ## Install
 
-1. Download and extract `flush-wallet-0.3.3.zip` from the release.
+1. Download and extract `flush-wallet-0.3.4.zip` from the release.
 2. Open `chrome://extensions` in desktop Chrome and enable **Developer mode**.
 3. Choose **Load unpacked**, select the extracted `flush-wallet` folder, and pin the extension.
 4. Create a wallet or import your recovery words.
@@ -27,7 +27,7 @@ The interface uses the Flush site's official mark, colours, Barlow typography an
 
 ## Network and current limits
 
-This release uses **temporary betanet, Flush slot 99**. L1 Explorer address lookups currently return HTTP 405; L1 balances and history can be unavailable until that external service is fixed. A funded public Explorer purchase/transfer is still outstanding. The site's connection-cancellation fix is in [PR #1](https://github.com/block-fabric/flush-markets/pull/1).
+This release uses **temporary betanet, Flush slot 99**. L1 Explorer address lookups currently return HTTP 405; L1 balances and history can be unavailable until that external service is fixed. Public Explorer-backed Flush buys, sales, native/token sends, return transfers and fresh-profile seed recovery have been verified with confirmed transactions. The site's browser-wallet cancellation/error fix is in [PR #1](https://github.com/block-fabric/flush-markets/pull/1).
 
 Token spending requires resolved per-output metadata; missing metadata blocks token signing. Own-node Activity explicitly shows transactions sent from this browser; incoming receipts still affect balances. Older spent token movements need resolved historical annotations from Explorer. Mainnet, asset creation, liquidity management, auctions, staking and peg-outs are not enabled. The [issues](https://github.com/seriouscatsoserious/flush-wallet/issues) track release blockers and follow-up work.
 
