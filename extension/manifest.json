@@ -1,0 +1,60 @@
+{
+  "manifest_version": 3,
+  "name": "Flush Wallet",
+  "version": "0.3.0",
+  "minimum_chrome_version": "111",
+  "description": "eCash and Flush in one browser wallet. Receive, send and swap with keys kept on your device.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://explorer.blockfab.org/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Flush Wallet",
+    "default_icon": {
+      "16": "icons/16.png",
+      "32": "icons/32.png",
+      "128": "icons/128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "128": "icons/128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://flush.markets/*"
+      ],
+      "js": [
+        "provider.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://flush.markets/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'"
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzIe5Y/r13iqp8XmZ6hhTXQuV67oJaVJVgb2qgTPMG6nujvChDlb63AG9yKYqYnEOpLRUFMKVwuvezNfpTn6yd1+KiTtOWSYyBRcuWu7qwcIXa6bAdIYfmQdcmD1VK0wMptn3ebScdMLkpEQ/pRMttdaR1J0WjijCSnRCNztwr4QI7ihwyvyZ+iBbn2fNkltfS9uCXC7+OTi1DpFugHfKtqxSOE59Yr2alCheHXk4mMblfuMGUmbxZF5n6EsfhJyS72/WLoLxCGOdrZy0r3+lyR62UsnR9pd6ntBgdPhY2bMNaO1SvuZenmQXxLHCgNYbcXq3EY68CDAei3TXymaViwIDAQAB",
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ]
+}

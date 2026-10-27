@@ -1,0 +1,72 @@
+Flush Wallet 0.3.0 — Chrome extension, betanet preview
+
+INSTALL
+1. Extract flush-wallet.zip.
+2. Open chrome://extensions and enable Developer mode.
+3. Choose Load unpacked and select the extracted flush-wallet folder.
+4. Pin Flush Wallet, then create or import a recovery phrase.
+
+DEFAULT CONNECTION
+Explorer is the default. The extension reads eCash, Flush, token metadata,
+logos and transaction history from https://explorer.blockfab.org and sends
+locally signed transactions to its broadcast endpoints. No local service,
+node download, or account pairing is needed for Explorer mode.
+
+OPTIONAL OWN-NODE CONNECTION
+Settings -> Advanced -> Connection -> Your own node.
+Enter an eCash betanet RPC URL and a Flush slot-99 RPC URL, with RPC
+username:password credentials or the contents of each node's cookie file.
+Click Pair nodes. Only this action requests Chrome access to those hosts.
+The wallet checks the eCash fork checkpoint and Flush genesis/slot before
+saving the connection. A failed pairing keeps the current connection.
+
+HTTP is supported on loopback (localhost, 127.0.0.1 or ::1). Remote nodes
+require HTTPS. Their RPC service must accept your browser machine's IP.
+Credentials are encrypted on this device and sent only to those endpoints.
+The node connection never receives your wallet seed or private keys.
+Returning to Explorer deletes the saved credentials and releases the optional
+node host permissions. Direct RPC does not silently fall back to Explorer.
+RPC activity includes transactions sent by this browser; use Explorer mode
+for explorer-indexed historical receipts and spending.
+
+KEYS AND RECOVERY
+A new wallet generates 12 words locally and asks you to re-enter three
+randomly chosen words. Choose and confirm a local unlock password.
+The seed is stored encrypted with AES-GCM and a password-derived key.
+Keep the recovery words: they restore both chain accounts. Auto-lock is
+two minutes. A BIP39 extra passphrase is not supported in this preview.
+
+Accounts derived from one seed:
+  eCash L1: m/84'/0'/0'/0/0       (bc1... on eCash betanet)
+  Flush L2: m/84'/1'/0'/0/0       (bflx1...)
+Existing Flush 0.1/0.2 wallet addresses are preserved on upgrade.
+L1 transactions include eCash's replay-protection locktime marker.
+These paths do not import arbitrary Core descriptor wallets or Solana wallets.
+
+FEATURES AND PREVIEW LIMITS
+L1 ECX, L2 ECX, and Flush assets; receive/send, token logos and names, swap,
+launch buys/sales, deposit addresses, activity and flush.markets approvals.
+Every transaction is constructed and signed inside the extension and requires
+an explicit review. No server-side wallet is created.
+
+Token inputs require resolved state per UTXO. Explorer mode expects the new
+`token` annotation in its Flush UTXO API. RPC mode expects that annotation
+from gettxout. Missing token metadata disables token spending; it is never
+guessed from a transaction's marker. Ordinary ECX sends remain available.
+
+Temporary betanet, slot 99. Mainnet, asset creation, liquidity management,
+auctions, staking and peg-out transactions are not enabled. Funded live-chain
+transfers have not been broadcast in validation.
+
+DEVELOPMENT
+npm ci
+npm run build
+npm test
+npm run test:browser
+node test/advanced-browser.mjs
+
+The advanced browser test uses in-process RPC fixtures, not a live server.
+No node/API service is started or required by the build or browser tests.
+
+Design: block-fabric/flush-markets docs/design.md and app.css; official Flush
+mark. Barlow and JetBrains Mono fonts are bundled under SIL OFL licences.

@@ -1,0 +1,74 @@
+/* flush.markets: the Launchpad look of the Flush app (backbone-flush src/webui/app/src/styles/themes.css,
+   launchpad.css): near-black and stark white, one cool blue-grey, amber only for warnings; hairlines rather
+   than boxes; Barlow in wide-tracked capitals for headings and labels, JetBrains Mono for numbers.
+   The colour values are the app's (Launchpad / Launchpad Day); keep them in step (docs/design.md). */
+
+:root,
+:root[data-theme='dark'] {
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --surface-2: #101113;
+  --raised: #1a1c1f;
+  --line: #1f2226;
+  --line-strong: #3a3f45;
+  --text: #f5f6f7;
+  --text-muted: #adb3bb;
+  --text-faint: #8d939b;
+  --accent: #d5dee7;
+  --accent-strong: #eef2f6;
+  --accent-soft: #1b2128;
+  --accent-fg: #bccad8;
+  --on-accent: #000000;
+  --link: #c6d4e2;
+  --brand: #7d94ab;
+  --positive: #a9d8bd;
+  /* Candles, as exchanges draw them: up green, down red. */
+  --candle-up: #2ebd85;
+  --candle-down: #f6465d;
+  --negative: #f0a39b;
+  --warning: #ffb547;
+  --warning-soft: #241806;
+  --focus: #ffffff;
+  --chart-fill: rgb(213 222 231 / 10%);
+  --overlay: rgb(0 0 0 / 82%);
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f5f6f7;
+  --raised: #eaecef;
+  --line: #e2e5e9;
+  --line-strong: #b9bec5;
+  --text: #000000;
+  --text-muted: #474d55;
+  --text-faint: #5c636c;
+  --accent: #0b0d10;
+  --accent-strong: #000000;
+  --accent-soft: #e6ebf0;
+  --accent-fg: #2c3d4f;
+  --on-accent: #ffffff;
+  --link: #21374d;
+  --brand: #4f6780;
+  --positive: #17643f;
+  --candle-up: #0e9f6e;
+  --candle-down: #d9304e;
+  --negative: #ad2a21;
+  --warning: #8a4600;
+  --warning-soft: #fff0d9;
+  --focus: #000000;
+  --chart-fill: rgb(44 61 79 / 9%);
+  --overlay: rgb(255 255 255 / 85%);
+  color-scheme: light;
+}
+
+:root {
+  --font-ui: 'Barlow', 'Segoe UI', 'Noto Sans', system-ui, sans-serif;
+  --font-num: 'JetBrains Mono Variable', 'DejaVu Sans Mono', ui-monospace, monospace;
+  --track: 0.14em;
+  --track-wide: 0.24em;
+  --radius: 2px;
+  --gutter: 16px;
+  --max: 1280px;
+}

@@ -1,0 +1,24 @@
+{
+  "name": "flush-browser-wallet",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/*.test.mjs",
+    "test:browser": "node test/browser.mjs",
+    "test:advanced": "node test/advanced-browser.mjs",
+    "demo": "npm run build && node scripts/demo.mjs"
+  },
+  "dependencies": {
+    "@noble/curves": "^2.0.1",
+    "@scure/bip32": "^2.0.1",
+    "@scure/bip39": "^2.0.1",
+    "bitcoinjs-lib": "^7.0.0",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.11",
+    "playwright": "^1.56.1"
+  }
+}
