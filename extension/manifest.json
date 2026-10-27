@@ -8,7 +8,8 @@
     "storage"
   ],
   "host_permissions": [
-    "https://explorer.blockfab.org/*"
+    "https://explorer.blockfab.org/*",
+    "https://flush.markets/*"
   ],
   "background": {
     "service_worker": "background.js",

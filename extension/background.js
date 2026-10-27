@@ -15488,6 +15488,7 @@ async function request(url, options = {}, json = true) {
   return data;
 }
 async function api(path, options = {}) {
+  if (path.startsWith("/api/v1/quote/swap?")) return request("https://flush.markets" + path, options);
   if (path.startsWith("/api/v1/")) return request(EXPLORERS.flush + "/api/v1/flush/market/" + path.slice("/api/v1/".length), options);
   throw Error("Unsupported explorer API path");
 }
@@ -15527,13 +15528,14 @@ async function explorerCoins(chain2, addr) {
   const utxos = [];
   for (let start = 0; start < list.length; start += 5) {
     const group = await Promise.all(list.slice(start, start + 5).map(async (u) => {
+      if (u.spendable === false) return null;
       if (!/^[a-f0-9]{64}$/.test(u.txid) || !Number.isSafeInteger(u.vout) || u.vout < 0 || !Number.isSafeInteger(u.value) || u.value < 0) throw Error("Invalid explorer output");
       const tx = await transaction(chain2, u.txid), out = tx.vout?.[u.vout];
       if (!out || out.scriptpubkey !== mine || out.value !== u.value) throw Error("Explorer output does not match your address");
       const confirmations = u.status.confirmed ? Math.max(0, height - u.status.block_height + 1) : 0;
       return { txid: u.txid, vout: u.vout, value_sat: String(u.value), scriptPubKey: out.scriptpubkey, confirmations, coinbase: Boolean(tx.vin?.[0]?.is_coinbase), token: chain2 === "flush" ? Object.hasOwn(u, "token") ? normalizeToken(u.token) : u.value === 0 ? { kind: 255 } : null : null };
     }));
-    utxos.push(...group);
+    utxos.push(...group.filter(Boolean));
   }
   const token_metadata_available = chain2 !== "flush" || !utxos.some((u) => u.token?.kind === 255);
   return { address: addr, height, chain: chain2, utxos: utxos.filter((u) => !u.spent), stats: balances, token_metadata_available };
@@ -15900,7 +15902,7 @@ async function useExplorer() {
   rpcConfig = null;
   connectionGeneration++;
   plan = null;
-  for (const origin of origins) if (origin !== "https://explorer.blockfab.org/*") await chrome.permissions.remove({ origins: [origin] });
+  for (const origin of origins) if (!chrome.runtime.getManifest().host_permissions.includes(origin)) await chrome.permissions.remove({ origins: [origin] });
   return { mode: "explorer" };
 }
 async function updateAccounts(phrase) {

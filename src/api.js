@@ -10,8 +10,10 @@ async function request(url,options={},json=true){
  if(!r.ok)throw Error(typeof data?.error==='string'?data.error:data?.error?.message||String(text).slice(0,180)||'Explorer unavailable');
  return data;
 }
-// DEX reads and quotes use the explorer's own public Flush proxy.
+// The Explorer proxies market reads, but deliberately excludes REST quote routes.
+// Quotes use the launch site's public node API; balances and broadcasts stay on Explorer.
 export async function api(path,options={}){
+ if(path.startsWith('/api/v1/quote/swap?'))return request('https://flush.markets'+path,options);
  if(path.startsWith('/api/v1/'))return request(EXPLORERS.flush+'/api/v1/flush/market/'+path.slice('/api/v1/'.length),options);
  throw Error('Unsupported explorer API path');
 }
@@ -42,12 +44,13 @@ export async function explorerCoins(chain,addr){
  // Small groups bound requests without serialising the entire address.
  for(let start=0;start<list.length;start+=5){
   const group=await Promise.all(list.slice(start,start+5).map(async u=>{
+   if(u.spendable===false)return null;
    if(!/^[a-f0-9]{64}$/.test(u.txid)||!Number.isSafeInteger(u.vout)||u.vout<0||!Number.isSafeInteger(u.value)||u.value<0)throw Error('Invalid explorer output');
    const tx=await transaction(chain,u.txid),out=tx.vout?.[u.vout];
    if(!out||out.scriptpubkey!==mine||out.value!==u.value)throw Error('Explorer output does not match your address');
    const confirmations=u.status.confirmed?Math.max(0,height-u.status.block_height+1):0;
    return {txid:u.txid,vout:u.vout,value_sat:String(u.value),scriptPubKey:out.scriptpubkey,confirmations,coinbase:Boolean(tx.vin?.[0]?.is_coinbase),token:chain==='flush'?(Object.hasOwn(u,'token')?normalizeToken(u.token):(u.value===0?{kind:255}:null)):null};
-  }));utxos.push(...group);
+  }));utxos.push(...group.filter(Boolean));
  }
  // Flush token inputs are spendable only when the explorer supplies resolved state.
  const token_metadata_available=chain!=='flush'||!utxos.some(u=>u.token?.kind===255);

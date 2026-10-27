@@ -9,7 +9,8 @@ INSTALL
 DEFAULT CONNECTION
 Explorer is the default. The extension reads eCash, Flush, token metadata,
 logos and transaction history from https://explorer.blockfab.org and sends
-locally signed transactions to its broadcast endpoints. No local service,
+locally signed transactions to its broadcast endpoints. Swap quotes come from
+the public node API at https://flush.markets. No local service,
 node download, or account pairing is needed for Explorer mode.
 
 OPTIONAL OWN-NODE CONNECTION

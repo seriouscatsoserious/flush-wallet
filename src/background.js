@@ -37,7 +37,7 @@ async function useExplorer(){
  const old=(await store.get('rpcConnection')).rpcConnection;let origins=[];
  if(old&&unlocked()){try{const config=rpcConfig||await openConnection(old,mnemonic);origins=[...new Set(['ecash','flush'].map(c=>rpcOrigin(config[c].url)))];}catch{}}
  await store.remove('rpcConnection');await store.set({connectionMode:'explorer'});rpcBackend=null;rpcConfig=null;connectionGeneration++;plan=null;
- for(const origin of origins)if(origin!=='https://explorer.blockfab.org/*')await chrome.permissions.remove({origins:[origin]});
+ for(const origin of origins)if(!chrome.runtime.getManifest().host_permissions.includes(origin))await chrome.permissions.remove({origins:[origin]});
  return {mode:'explorer'};
 }
 async function updateAccounts(phrase){const v=await vault();if(!v)throw Error('No wallet');await store.set({vault:{...v,accounts:publicAccounts(phrase)}});}

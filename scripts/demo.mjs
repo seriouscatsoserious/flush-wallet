@@ -44,6 +44,7 @@ try{
   chrome.permissions.request=async()=>{throw Error('Demo must not request node access');};
   globalThis.fetch=async(input,options={})=>{
    const url=new URL(String(input));globalThis.__demoRequests.push({url:url.href,method:options.method||'GET'});
+   if(url.hostname==='flush.markets'&&url.pathname==='/api/v1/quote/swap')return response({amount_out:'250',amount_out_units:'250000000',min_out_units:'247500000',best:{pools:[pool],path_ids:[null,asset]}});
    if(url.hostname!=='explorer.blockfab.org')throw Error('Demo blocked unexpected host: '+url.hostname);
    const chain=url.pathname.startsWith('/betanet/flush/')?'flush':'ecash';
    const path=url.pathname.replace(chain==='flush'?'/betanet/flush':'/betanet','');
@@ -54,7 +55,6 @@ try{
    if(path==='/api/v1/flush/market/assets')return response({items:[assetInfo]});
    if(path==='/api/v1/flush/market/assets/'+asset)return response(assetInfo);
    if(path.startsWith('/api/v1/flush/market/addresses/'))return response({items:[{kind:'asset',asset_id:asset,ticker:'FLUSH',amount_units:'2750000000'}]});
-   if(path==='/api/v1/flush/market/quote/swap')return response({amount_out:'250',amount_out_units:'250000000',min_out_units:'247500000',best:{pools:[pool],path_ids:[null,asset]}});
    if(path==='/api/v1/flush/market/pools/'+pool)return response({id:pool,asset_a_id:null,asset_b_id:asset});
    if(path.endsWith('/utxo'))return response([
     {txid:nativeIds[chain],vout:0,value:nativeValues[chain],status,token:null},

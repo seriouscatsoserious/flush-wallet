@@ -2,6 +2,8 @@
 
 A Chrome extension for L1 ECX, ECX on Flush, and Flush assets. Keys and transaction signing stay in the browser. The public Explorer is the default connection; using your own eCash and Flush RPC nodes is an optional setting under **Settings → Advanced → Connection**.
 
+In Explorer mode, swap quotes come from the public Flush API at `flush.markets`; the Explorer's market proxy excludes quote routes. Address reads and transaction broadcasting use the Explorer. Own-node mode gets all of its data and quotes directly from the paired RPC nodes.
+
 The interface follows the Flush site's colours, official mark, Barlow typography, JetBrains Mono readouts, and hairline layout.
 
 ![All 24 wallet screens](docs/demo/flush-wallet-collage.png)
