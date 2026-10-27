@@ -10,7 +10,9 @@
       "category": "Onboarding",
       "file": "screens/01-welcome.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 2,
@@ -18,7 +20,9 @@
       "category": "Onboarding",
       "file": "screens/02-save-recovery-phrase.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 3,
@@ -26,7 +30,9 @@
       "category": "Onboarding",
       "file": "screens/03-confirm-recovery-words.png",
       "width": 390,
-      "height": 886
+      "height": 886,
+      "pixelWidth": 780,
+      "pixelHeight": 1772
     },
     {
       "number": 4,
@@ -34,7 +40,9 @@
       "category": "Onboarding",
       "file": "screens/04-import-wallet.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 5,
@@ -42,7 +50,9 @@
       "category": "Onboarding",
       "file": "screens/05-unlock-wallet.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 6,
@@ -50,7 +60,9 @@
       "category": "Wallet",
       "file": "screens/06-wallet-overview.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 7,
@@ -58,7 +70,9 @@
       "category": "Wallet",
       "file": "screens/07-ecash-account.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 8,
@@ -66,7 +80,9 @@
       "category": "Wallet",
       "file": "screens/08-token-account.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 9,
@@ -74,7 +90,9 @@
       "category": "Receive",
       "file": "screens/09-receive-ecash.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 10,
@@ -82,7 +100,9 @@
       "category": "Receive",
       "file": "screens/10-receive-on-flush.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 11,
@@ -90,7 +110,9 @@
       "category": "Receive",
       "file": "screens/11-deposit-to-flush.png",
       "width": 390,
-      "height": 784
+      "height": 784,
+      "pixelWidth": 780,
+      "pixelHeight": 1568
     },
     {
       "number": 12,
@@ -98,7 +120,9 @@
       "category": "Send",
       "file": "screens/12-send-ecx.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 13,
@@ -106,7 +130,9 @@
       "category": "Send",
       "file": "screens/13-send-a-token.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 14,
@@ -114,7 +140,9 @@
       "category": "Send",
       "file": "screens/14-review-transfer.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 15,
@@ -122,7 +150,9 @@
       "category": "Send",
       "file": "screens/15-transfer-complete.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 16,
@@ -130,7 +160,9 @@
       "category": "Trade",
       "file": "screens/16-swap.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 17,
@@ -138,7 +170,9 @@
       "category": "Trade",
       "file": "screens/17-review-swap.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 18,
@@ -146,7 +180,9 @@
       "category": "Wallet",
       "file": "screens/18-activity.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 19,
@@ -154,7 +190,9 @@
       "category": "Settings",
       "file": "screens/19-settings.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 20,
@@ -162,7 +200,9 @@
       "category": "Settings",
       "file": "screens/20-reveal-recovery-phrase.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 21,
@@ -170,7 +210,9 @@
       "category": "Settings",
       "file": "screens/21-recovery-phrase.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 22,
@@ -178,7 +220,9 @@
       "category": "Advanced",
       "file": "screens/22-explorer-connection.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     },
     {
       "number": 23,
@@ -186,7 +230,9 @@
       "category": "Advanced",
       "file": "screens/23-own-node-connection.png",
       "width": 390,
-      "height": 979
+      "height": 979,
+      "pixelWidth": 780,
+      "pixelHeight": 1958
     },
     {
       "number": 24,
@@ -194,7 +240,9 @@
       "category": "Connect",
       "file": "screens/24-connect-to-flush-markets.png",
       "width": 390,
-      "height": 760
+      "height": 760,
+      "pixelWidth": 780,
+      "pixelHeight": 1520
     }
   ]
 }

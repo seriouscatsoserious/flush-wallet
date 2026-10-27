@@ -1,6 +1,6 @@
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
-import {mkdtemp,mkdir,readFile,writeFile,rm} from 'node:fs/promises';
+import {mkdtemp,mkdir,readFile,writeFile,copyFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {resolve} from 'node:path';
 import {account,hex,signPlan} from '../src/core.js';
@@ -13,9 +13,11 @@ const recipient=account('legal winner thank year wave sausage worth useful legal
 const asset='44'.repeat(32),pool='55'.repeat(32);
 const output=resolve('docs/demo'),screens=output+'/screens';
 await mkdir(screens,{recursive:true});
+await mkdir('docs/assets/fonts',{recursive:true});
+for(const file of ['barlow-300.woff2','barlow-400.woff2','barlow-500.woff2','jetbrains-mono.woff2'])await copyFile('assets/fonts/'+file,'docs/assets/fonts/'+file);
 const profile=await mkdtemp(tmpdir()+'/flush-demo-');
 const browser=await chromium.launchPersistentContext(profile,{
- channel:'chromium',headless:true,viewport:{width:390,height:760},deviceScaleFactor:1,
+ channel:'chromium',headless:true,viewport:{width:390,height:760},deviceScaleFactor:2,
  locale:'en-US',timezoneId:'UTC',
  args:['--no-sandbox','--disable-extensions-except='+resolve('extension'),'--load-extension='+resolve('extension')]
 });
@@ -83,7 +85,7 @@ try{
   await page.setViewportSize({width:390,height});await page.evaluate(()=>window.scrollTo(0,0));
   const name=String(number).padStart(2,'0')+'-'+title.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.png';
   await page.screenshot({path:screens+'/'+name,animations:'disabled'});
-  frames.push({number,title,category,file:'screens/'+name,width:390,height});
+  frames.push({number,title,category,file:'screens/'+name,width:390,height,pixelWidth:780,pixelHeight:height*2});
   await page.setViewportSize({width:390,height:760});
  }
  async function idle(){await p.waitForFunction(()=>!document.querySelector('button:disabled'));}
@@ -150,7 +152,7 @@ try{
  await sheet.locator('[data-filter="All"]').click();assert.equal(await sheet.locator('figure:visible').count(),24);
  await sheet.locator('figure a').first().click();assert(await sheet.locator('#viewer').isVisible());await sheet.locator('#close').click();
  await sheet.evaluate(()=>{document.body.classList.add('print');window.scrollTo(0,0);});
- await sheet.screenshot({path:output+'/flush-wallet-collage.png',fullPage:true});
+ await sheet.screenshot({path:output+'/flush-wallet-collage.png',fullPage:true,scale:'css'});
  await sheet.pdf({path:output+'/flush-wallet-collage.pdf',width:'2700px',height:(await sheet.evaluate(()=>document.documentElement.scrollHeight))+'px',printBackground:true,margin:{top:0,right:0,bottom:0,left:0}});
  console.log(`Captured ${frames.length} actual extension screens with offline fixtures.`);
  console.log('Collage: docs/demo/flush-wallet-collage.png');console.log('Interactive gallery: docs/demo/gallery.html');

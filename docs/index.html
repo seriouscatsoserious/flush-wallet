@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Explore all 24 Flush Wallet screens at full resolution. A browser preview with demo data.">
+  <title>Flush Wallet — Screen demo</title>
+  <link rel="stylesheet" href="assets/viewer.css">
+  <script src="assets/viewer.js" type="module"></script>
+</head>
+<body>
+  <header class="masthead">
+    <a class="brand" href="./" aria-label="Flush Wallet demo home"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 6h24M8 12.5h17M12 19h10M15 25.5h4"/></svg><span>Flush <small>Wallet</small></span></a>
+    <a class="repo" href="https://github.com/seriouscatsoserious/flush-wallet">Source ↗</a>
+  </header>
+  <main>
+    <div class="intro"><h1>Explore the wallet</h1><p>24 screens · Demo balances &amp; transactions</p></div>
+    <nav class="filters" id="filters" aria-label="Filter screens by flow"></nav>
+    <div class="layout">
+      <aside><h2>Screens</h2><nav id="screen-list" aria-label="Choose a wallet screen"></nav></aside>
+      <section class="preview" aria-label="Wallet screen preview">
+        <div class="screen-heading"><span id="position">Loading…</span><h2 id="screen-title"></h2></div>
+        <label for="screen-picker" class="sr-only">Choose a wallet screen</label><select id="screen-picker"></select>
+        <a id="full-size" class="screen" target="_blank" rel="noopener" title="Open full-resolution image"><img id="screen-image" alt="" width="390" height="760"></a>
+        <p class="hint">Tap the screen to open the full-resolution image. Pinch to zoom.</p>
+        <p class="demo-note">Visual demo only. The recovery phrase is public test data. Never fund the addresses shown.</p>
+      </section>
+    </div>
+    <p id="error" role="alert" hidden></p>
+  </main>
+  <footer class="controls"><button id="previous" aria-label="Previous screen">← Previous</button><span id="counter" aria-live="polite"></span><button id="next" aria-label="Next screen">Next →</button></footer>
+</body>
+</html>

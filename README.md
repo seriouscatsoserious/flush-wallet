@@ -8,6 +8,7 @@ The interface follows the Flush site's colours, official mark, Barlow typography
 
 ## Demo
 
+- [Online screen viewer](https://seriouscatsoserious.github.io/flush-wallet/) — browse all 24 screens on mobile or desktop, filter by flow, and open each capture at full resolution.
 - [Full-resolution collage](docs/demo/flush-wallet-collage.png)
 - [PDF collage](docs/demo/flush-wallet-collage.pdf)
 - [Interactive gallery](docs/demo/gallery.html) — download and open locally; fonts and images are embedded. Filter by flow or click a screen to see it at full size.
@@ -45,7 +46,7 @@ npm run test:browser
 npm run test:advanced
 ```
 
-`npm run demo` regenerates all 24 screenshots, the collage PNG/PDF, and the standalone gallery in `docs/demo`. It uses intercepted fixture responses. The two browser tests also exercise the live Explorer; the advanced test intercepts its node RPC calls and broadcasts only to a fixture. On Linux, Playwright may need browser system libraries (`npx playwright install --with-deps chromium`).
+`npm run demo` regenerates all 24 screenshots at 2× resolution, the collage PNG/PDF, and the standalone gallery in `docs/demo`. It also copies the fonts used by the hosted viewer. GitHub Pages serves `docs/` from `main`; the viewer is static and needs no wallet connection or server on your machine. Captures use intercepted fixture responses. The two browser tests also exercise the live Explorer; the advanced test intercepts its node RPC calls and broadcasts only to a fixture. On Linux, Playwright may need browser system libraries (`npx playwright install --with-deps chromium`).
 
 ## What works in this preview
 
