@@ -1,0 +1,39 @@
+{
+  "passed": true,
+  "network": "local regtest",
+  "slot": 46,
+  "checkedAt": "2026-10-27T09:58:13.018Z",
+  "address": "rsc1qgux4y9sjclq8ql2505208c573dw8g07lrngzen",
+  "fundingTx": "a1099907fede74869a8085b131664752868908b6b4cfea81d87b68314e29f501",
+  "swapTx": "0d1b1109c9221e6ec49d639f4456087c2b3b2d32cc5fd94a7321816b71fae4d0",
+  "paidECX": "0.1",
+  "token": "FLUX",
+  "tokenId": "c5e159225f1105ac563ec6c317c6edc4fdd26c89cfc6600b5527856b8a273831",
+  "receivedUnits": "81682",
+  "received": "816.82",
+  "minimum": "808.65 FLUX",
+  "confirmations": 1,
+  "balanceAfterSat": "89997982",
+  "externalRequests": 0,
+  "realNodeBroadcast": true,
+  "mockedResponses": false,
+  "testBuild": "Network/address parameters only; production stays betanet-only",
+  "review": [
+    {
+      "label": "You pay",
+      "value": "0.1 ECX"
+    },
+    {
+      "label": "Minimum received",
+      "value": "808.65 FLUX"
+    },
+    {
+      "label": "Network fee",
+      "value": "0.00002018 ECX"
+    },
+    {
+      "label": "Network",
+      "value": "Flush regtest"
+    }
+  ]
+}

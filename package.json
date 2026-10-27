@@ -8,6 +8,7 @@
     "test": "node --test test/*.test.mjs",
     "test:browser": "node test/browser.mjs",
     "test:advanced": "node test/advanced-browser.mjs",
+    "test:regtest": "node test/regtest.mjs",
     "demo": "npm run build && node scripts/demo.mjs"
   },
   "dependencies": {

@@ -50,6 +50,33 @@ npm run test:advanced
 
 `npm run demo` regenerates all 24 screenshots at 2× resolution, the collage PNG/PDF, and the standalone gallery in `docs/demo`. It also copies the fonts used by the hosted viewer. GitHub Pages serves `docs/` from `main`; the viewer is static and needs no wallet connection or server on your machine. Captures use intercepted fixture responses. The two browser tests also exercise the live Explorer; the advanced test intercepts its node RPC calls and broadcasts only to a fixture. On Linux, Playwright may need browser system libraries (`npx playwright install --with-deps chromium`).
 
+## Confirmed swap on real local nodes
+
+On October 27, 2026, the browser wallet received **816.82 FLUX for 0.1 generated test ECX**, confirmed in a real Flush regtest block. The network fee was **0.00002018 ECX**. After funding the browser with 1 ECX, its remaining native balance was **0.89997982 ECX**. The reviewed minimum was **808.65 FLUX**, and the received amount exceeded it.
+
+The test used the official Flush playground: a Backbone mainchain, three Flush validators, generated coins, and a real FLUX/ECX pool. The browser constructed, signed and broadcast the swap; resolved token state from the node and the actual wallet screen both showed the receipt. No RPC responses were mocked and no public network was contacted by the test wallet. All five temporary processes were stopped afterward.
+
+- [Machine-readable test result](docs/test/regtest-swap.json)
+- [Wallet after the confirmed purchase](https://seriouscatsoserious.github.io/flush-wallet/test/wallet-after.png)
+- [Transaction review](https://seriouscatsoserious.github.io/flush-wallet/test/swap-review.png)
+
+The test compiles a separate extension under ignored `runtime/`, changing network/address constants and network labels for regtest. Production network checks stay pinned to betanet. This verifies the wallet's real signing, broadcast and token-receipt flow on local nodes; the public Explorer-funded flow is still unverified.
+
+To repeat it, obtain the official [Flush playground](https://github.com/block-fabric/backbone-flush/tree/44ee8f2cfcae3d0d91afba7a617b7c02929fc0de/contrib/playground), its Flush binaries, and Backbone binaries supporting `-testecash`. The Flush node must expose resolved `token` metadata from `gettxout` (as in Flush 7.0.1 or the browser-wallet RPC patch).
+
+```sh
+FLUSH_PLAYGROUND_ARGS='-bind=127.0.0.1 -rpcbind=127.0.0.1 -rpcallowip=127.0.0.1' \
+  /path/to/backbone-flush/contrib/playground/flush-playground.sh \
+  --dir "$PWD/runtime/regtest-playground" start --no-app \
+  --flush-bin /path/to/flush/bin --backbone-bin /path/to/backbone/bin \
+  --base-port 49800 --block-seconds 1
+npm run test:regtest
+/path/to/backbone-flush/contrib/playground/flush-playground.sh \
+  --dir "$PWD/runtime/regtest-playground" stop
+```
+
+Stop the playground even if a test fails. Use `FLUSH_PLAYGROUND_DIR` when the playground data is elsewhere. The test refuses any mainchain or sidechain that is not regtest with the expected genesis and slot 46. Screenshots and the JSON result are regenerated under `output/`.
+
 ## What works in this preview
 
 - Local 12-word seed creation, three-word backup check, seed import, password-encrypted storage, recovery display, and auto-lock.
