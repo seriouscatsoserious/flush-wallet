@@ -1,6 +1,7 @@
 import {normalizeToken} from './token.js';
 import {address,Transaction} from 'bitcoinjs-lib';
 import {chainNetwork,hex,decimal} from './core.js';
+import {summarizeTransaction} from './history.js';
 export const EXPLORERS=Object.freeze({ecash:'https://explorer.blockfab.org/betanet',flush:'https://explorer.blockfab.org/betanet/flush'});
 export function explorerBase(chain='flush'){const base=EXPLORERS[chain];if(!base)throw Error('Unknown chain');return base;}
 async function request(url,options={},json=true){
@@ -59,11 +60,17 @@ export async function explorerCoins(chain,addr){
 export async function explorerHoldings(addr){return api('/api/v1/addresses/'+addr+'/holdings');}
 export async function explorerHistory(chain,addr){
  const txs=await request(explorerBase(chain)+'/api/address/'+addr+'/txs');if(!Array.isArray(txs))throw Error('Invalid transaction history');
- return txs.map(tx=>{
-  let input=0n,output=0n;for(const v of tx.vin||[])if(v.prevout?.scriptpubkey_address===addr)input+=BigInt(v.prevout.value);for(const v of tx.vout||[])if(v.scriptpubkey_address===addr)output+=BigInt(v.value);
-  const net=output-input;
-  return {txid:tx.txid,chain,type:net<0n?'send':net>0n?'receive':'asset',amount:decimal(net<0n?-net:net),ticker:'ECX',time:(tx.status.block_time||0)*1000,confirmed:tx.status.confirmed};
- });
+ if(txs.length>100)throw Error('Explorer returned too many history entries');
+ const coins=chain==='flush'?await explorerCoins(chain,addr).catch(()=>null):null;
+ const known=new Map((coins?.utxos||[]).filter(u=>u.token?.kind!==255).map(u=>[u.txid+':'+u.vout,u]));
+ const history=txs.map(tx=>summarizeTransaction(tx,chain,addr,known));
+ const ids=[...new Set(history.flatMap(tx=>tx.changes.filter(c=>c.asset!=='ECX').map(c=>c.asset)))];
+ const metadata=new Map();
+ for(let start=0;start<Math.min(ids.length,100);start+=5)await Promise.all(ids.slice(start,start+5).map(async id=>{
+  try{const raw=await api('/api/v1/assets/'+id),a=raw.asset||raw;if(a.id!==id||!Number.isInteger(a.decimals)||a.decimals<0||a.decimals>12)throw Error('Invalid asset identity');metadata.set(id,a);}catch{}
+ }));
+ for(const tx of history)for(const c of tx.changes){const a=metadata.get(c.asset);if(a)Object.assign(c,{ticker:String(a.ticker||a.display_name||c.asset).slice(0,96),decimals:a.decimals});}
+ return history;
 }
 export async function explorerBroadcast(chain,raw){
  const tx=Transaction.fromHex(raw),burn=tx.outs.filter(o=>o.script[0]===106).reduce((s,o)=>s+o.value,0n);

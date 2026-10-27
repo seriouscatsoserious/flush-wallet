@@ -7357,6 +7357,21 @@
     return places ? s.slice(0, -places) + (f ? "." + f : "") : s;
   }
 
+  // src/history.js
+  function movementText(change) {
+    const amount = Number.isInteger(change.decimals) ? decimal(change.amount_units, change.decimals) : change.amount_units;
+    const symbol = change.ticker || change.asset.slice(0, 8) + "\u2026" + change.asset.slice(-4);
+    return `${change.direction === "send" ? "Sent" : "Received"} ${amount} ${symbol}${Number.isInteger(change.decimals) ? "" : " units"}`;
+  }
+  function activityTitle(tx) {
+    if (tx.changes?.length === 1) return movementText(tx.changes[0]);
+    if (tx.changes?.length > 1) return tx.type === "swap" ? "Swap" : "Asset transfer";
+    if (tx.type === "swap") return `Swapped ${tx.amount} ${tx.tickerIn || tx.assetIn || "ECX"}`;
+    if (tx.type === "asset") return "Asset transaction";
+    if (tx.type === "unknown") return "Transaction";
+    return `${tx.type === "send" ? "Sent" : "Received"} ${tx.amount} ${tx.ticker || tx.asset || "ECX"}`;
+  }
+
   // src/api.js
   var EXPLORERS = Object.freeze({ ecash: "https://explorer.blockfab.org/betanet", flush: "https://explorer.blockfab.org/betanet/flush" });
   function explorerBase(chain = "flush") {
@@ -7629,11 +7644,11 @@
     if (view === "history") {
       base2('<h1>Activity</h1><div class="loading">Loading transactions\u2026</div>');
       const result = await call("HISTORY"), history = result.items;
-      base2(`<h1>Activity</h1>${history.length ? history.map((t) => `<div class="card"><div class="split"><strong>${t.type === "asset" ? "Asset transaction" : `${t.type === "send" ? "Sent" : t.type === "receive" ? "Received" : "Swapped"} ${e(t.amount)} ${e(t.ticker || t.tickerIn || t.asset)}`}</strong><small>${t.time ? new Date(t.time).toLocaleDateString() : "Pending"}</small></div><div class="split"><small>${t.chain === "ecash" ? "eCash" : "Flush"} \xB7 ${t.status === "confirmed" || t.confirmed ? "Confirmed" : t.status === "failed" ? "Rejected" : t.status === "unknown" ? "Status unknown" : "Pending"}</small><a class="break fine" href="${explorerBase(t.chain || "flush")}/tx/${e(t.txid)}" target="_blank" rel="noopener">${e(short(t.txid))} \u2197</a></div></div>`).join("") : '<div class="empty">No transactions yet.</div>'}${result.unavailableChains.length ? `<p class="fine">${e(result.unavailableChains.join(" and "))} history is unavailable from this connection.</p>` : ""}`);
+      base2(`<h1>Activity</h1>${result.localOnly ? '<p class="fine" role="note">In own-node mode, Activity only shows sends and swaps made in this browser. Incoming transfers are included in your balance.</p>' : ""}${history.length ? history.map((t) => `<div class="card"><div class="split"><strong>${e(activityTitle(t))}</strong><small>${t.time ? new Date(t.time).toLocaleDateString() : "Pending"}</small></div>${t.changes?.length > 1 ? t.changes.map((c) => `<p class="fine">${e(movementText(c))}</p>`).join("") : ""}${t.fee_sat ? `<div class="split fine"><span>Network fee</span><span>${e(decimal(t.fee_sat))} ECX</span></div>` : ""}${t.tokenDetailsUnavailable ? '<p class="fine">Some token details are unavailable from this connection.</p>' : ""}<div class="split"><small>${t.chain === "ecash" ? "eCash" : "Flush"} \xB7 ${t.status === "confirmed" || t.confirmed ? "Confirmed" : t.status === "failed" ? "Rejected" : t.status === "unknown" ? "Status unknown" : "Pending"}</small><a class="break fine" href="${explorerBase(t.chain || "flush")}/tx/${e(t.txid)}" target="_blank" rel="noopener">${e(short(t.txid))} \u2197</a></div></div>`).join("") : '<div class="empty">No transactions yet.</div>'}${result.unavailableChains.length ? `<p class="fine">${e(result.unavailableChains.join(" and "))} history is unavailable from this connection.</p>` : ""}`);
       return;
     }
     if (view === "settings") {
-      base2(`<h1>Settings</h1><div class="card"><div class="split"><span>Network</span><strong>eCash + Flush \xB7 Betanet</strong></div><div class="split"><span>Signing</span><strong>On this device</strong></div><div class="split"><span>Auto-lock</span><strong>2 minutes</strong></div></div><button class="secondary" id="recovery">Show recovery phrase</button><details class="advanced" id="advanced"><summary>Advanced</summary><button class="secondary" id="connection">Connection</button></details><div class="divider"></div><p class="fine">Temporary betanet. This chain will be replaced when Flush moves to slot 46.</p><p class="fine">Wallet 0.3.2 \xB7 Browser signing<br></p>`);
+      base2(`<h1>Settings</h1><div class="card"><div class="split"><span>Network</span><strong>eCash + Flush \xB7 Betanet</strong></div><div class="split"><span>Signing</span><strong>On this device</strong></div><div class="split"><span>Auto-lock</span><strong>2 minutes</strong></div></div><button class="secondary" id="recovery">Show recovery phrase</button><details class="advanced" id="advanced"><summary>Advanced</summary><button class="secondary" id="connection">Connection</button></details><div class="divider"></div><p class="fine">Temporary betanet. This chain will be replaced when Flush moves to slot 46.</p><p class="fine">Wallet 0.3.3 \xB7 Browser signing<br></p>`);
       bind("recovery", recovery);
       bind("connection", () => go("connection"));
       return;

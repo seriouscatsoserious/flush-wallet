@@ -1,7 +1,7 @@
-Flush Wallet 0.3.2 — Chrome extension, betanet preview
+Flush Wallet 0.3.3 — Chrome extension, betanet preview
 
 INSTALL
-1. Extract flush-wallet-0.3.2.zip.
+1. Extract flush-wallet-0.3.3.zip.
 2. Open chrome://extensions and enable Developer mode.
 3. Choose Load unpacked and select the extracted flush-wallet folder.
 4. Pin Flush Wallet, then create or import a recovery phrase.
@@ -27,7 +27,8 @@ Credentials are encrypted on this device and sent only to those endpoints.
 The node connection never receives your wallet seed or private keys.
 Returning to Explorer deletes the saved credentials and releases the optional
 node host permissions. Direct RPC does not silently fall back to Explorer.
-RPC activity includes transactions sent by this browser; use Explorer mode
+RPC Activity shows sends and swaps made by this browser; incoming funds
+are included in balances. Use Explorer mode
 for explorer-indexed historical receipts and spending.
 
 KEYS AND RECOVERY
@@ -58,6 +59,15 @@ guessed from a transaction's marker. Ordinary ECX sends remain available.
 Temporary betanet, slot 99. Mainnet, asset creation, liquidity management,
 auctions, staking and peg-out transactions are not enabled. Funded live-chain
 transfers have not been broadcast in validation.
+
+UPDATES
+Back up your recovery words privately. Replace files in the same unpacked
+installation folder, then click Reload in chrome://extensions. Keep the same
+extension ID; do not remove the wallet to update it.
+
+Privacy: https://seriouscatsoserious.github.io/flush-wallet/privacy.html
+Support: https://github.com/seriouscatsoserious/flush-wallet/issues
+Never post recovery words, passwords, private keys or RPC credentials.
 
 Design: block-fabric/flush-markets docs/design.md and app.css; official Flush
 mark. Barlow and JetBrains Mono fonts are bundled under SIL OFL licences.

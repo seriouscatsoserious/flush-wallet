@@ -15471,6 +15471,72 @@ function normalizeToken(token) {
 // src/api.js
 init_esm5();
 init_core();
+
+// src/history.js
+init_esm5();
+init_core();
+var integer2 = (value2) => {
+  if (!Number.isSafeInteger(value2) || value2 < 0) throw Error("Invalid transaction amount");
+  return BigInt(value2);
+};
+function summarizeTransaction(tx, chain2, addr, knownOutputs = /* @__PURE__ */ new Map()) {
+  if (!/^[a-f0-9]{64}$/.test(tx.txid) || !Array.isArray(tx.vin) || !Array.isArray(tx.vout)) throw Error("Invalid transaction history");
+  const mine = hex(address_exports.toOutputScript(addr, chainNetwork(chain2)));
+  const owned = (out) => out?.scriptpubkey === mine;
+  const inputsKnown = tx.vin.every((v) => v.is_coinbase || v.prevout);
+  let input = 0n, output = 0n, complete = true, ours = false;
+  const tokens = /* @__PURE__ */ new Map();
+  const record = (out, sign, point) => {
+    if (!owned(out)) return;
+    const value2 = integer2(out.value);
+    if (sign < 0) {
+      input += value2;
+      ours = true;
+    } else output += value2;
+    if (chain2 !== "flush") return;
+    let token;
+    if (Object.hasOwn(out, "token")) token = normalizeToken(out.token);
+    else if (knownOutputs.has(point)) {
+      const known = knownOutputs.get(point);
+      if (known.scriptPubKey !== mine || BigInt(known.value_sat) !== value2) throw Error("History output does not match resolved state");
+      token = known.token;
+    } else {
+      complete = false;
+      return;
+    }
+    if (token?.kind === 0) tokens.set(token.id, (tokens.get(token.id) || 0n) + BigInt(sign) * BigInt(token.amount_units));
+  };
+  for (const vin of tx.vin) {
+    if (!vin.is_coinbase && !vin.prevout) complete = false;
+    record(vin.prevout, -1, vin.txid + ":" + vin.vout);
+  }
+  tx.vout.forEach((out, n) => record(out, 1, tx.txid + ":" + n));
+  let fee = null;
+  if (ours && tx.vin.every((v) => owned(v.prevout))) {
+    if (Number.isSafeInteger(tx.fee) && tx.fee >= 0) fee = BigInt(tx.fee);
+    else if (tx.vin.every((v) => v.prevout)) {
+      const computed = tx.vin.reduce((sum, v) => sum + integer2(v.prevout.value), 0n) - tx.vout.reduce((sum, v) => sum + integer2(v.value), 0n);
+      if (computed >= 0n) fee = computed;
+    }
+  }
+  const net = output - input, native = net + (fee ?? 0n), changes = [];
+  if (inputsKnown && native !== 0n) changes.push({ asset: "ECX", ticker: "ECX", decimals: 8, direction: native > 0n ? "receive" : "send", amount_units: (native < 0n ? -native : native).toString() });
+  if (complete) {
+    for (const [asset, amount] of tokens) if (amount !== 0n) changes.push({ asset, direction: amount > 0n ? "receive" : "send", amount_units: (amount < 0n ? -amount : amount).toString() });
+  }
+  const directions = new Set(changes.map((c) => c.direction)), type = !inputsKnown ? "unknown" : directions.size > 1 ? "swap" : directions.size ? [...directions][0] : "asset";
+  return { txid: tx.txid, chain: chain2, type, amount: decimal(native < 0n ? -native : native), ticker: "ECX", changes, fee_sat: fee?.toString(), tokenDetailsUnavailable: chain2 === "flush" && !complete, time: (tx.status?.block_time || 0) * 1e3, confirmed: Boolean(tx.status?.confirmed), status: tx.status?.confirmed ? "confirmed" : "pending" };
+}
+function mergeHistory(indexed, local) {
+  const entries = new Map(indexed.map((tx) => [(tx.chain || "flush") + tx.txid, tx]));
+  for (const tx of local) {
+    const chain2 = tx.chain || "flush", key = chain2 + tx.txid, old = entries.get(key);
+    entries.set(key, { ...old, ...tx, chain: chain2, ...old?.confirmed ? { status: "confirmed", confirmed: true } : {}, ...old?.changes?.length ? { changes: old.changes } : {}, time: old?.time || tx.time || 0 });
+  }
+  return [...entries.values()].sort((a, b) => b.time - a.time);
+}
+
+// src/api.js
 var EXPLORERS = Object.freeze({ ecash: "https://explorer.blockfab.org/betanet", flush: "https://explorer.blockfab.org/betanet/flush" });
 function explorerBase(chain2 = "flush") {
   const base2 = EXPLORERS[chain2];
@@ -15554,13 +15620,25 @@ async function explorerHoldings(addr) {
 async function explorerHistory(chain2, addr) {
   const txs = await request(explorerBase(chain2) + "/api/address/" + addr + "/txs");
   if (!Array.isArray(txs)) throw Error("Invalid transaction history");
-  return txs.map((tx) => {
-    let input = 0n, output = 0n;
-    for (const v of tx.vin || []) if (v.prevout?.scriptpubkey_address === addr) input += BigInt(v.prevout.value);
-    for (const v of tx.vout || []) if (v.scriptpubkey_address === addr) output += BigInt(v.value);
-    const net = output - input;
-    return { txid: tx.txid, chain: chain2, type: net < 0n ? "send" : net > 0n ? "receive" : "asset", amount: decimal(net < 0n ? -net : net), ticker: "ECX", time: (tx.status.block_time || 0) * 1e3, confirmed: tx.status.confirmed };
-  });
+  if (txs.length > 100) throw Error("Explorer returned too many history entries");
+  const coins = chain2 === "flush" ? await explorerCoins(chain2, addr).catch(() => null) : null;
+  const known = new Map((coins?.utxos || []).filter((u) => u.token?.kind !== 255).map((u) => [u.txid + ":" + u.vout, u]));
+  const history = txs.map((tx) => summarizeTransaction(tx, chain2, addr, known));
+  const ids = [...new Set(history.flatMap((tx) => tx.changes.filter((c) => c.asset !== "ECX").map((c) => c.asset)))];
+  const metadata = /* @__PURE__ */ new Map();
+  for (let start = 0; start < Math.min(ids.length, 100); start += 5) await Promise.all(ids.slice(start, start + 5).map(async (id) => {
+    try {
+      const raw = await api("/api/v1/assets/" + id), a = raw.asset || raw;
+      if (a.id !== id || !Number.isInteger(a.decimals) || a.decimals < 0 || a.decimals > 12) throw Error("Invalid asset identity");
+      metadata.set(id, a);
+    } catch {
+    }
+  }));
+  for (const tx of history) for (const c of tx.changes) {
+    const a = metadata.get(c.asset);
+    if (a) Object.assign(c, { ticker: String(a.ticker || a.display_name || c.asset).slice(0, 96), decimals: a.decimals });
+  }
+  return history;
 }
 async function explorerBroadcast(chain2, raw) {
   const tx = Transaction.fromHex(raw), burn = tx.outs.filter((o) => o.script[0] === 106).reduce((s, o) => s + o.value, 0n);
@@ -15866,6 +15944,32 @@ function redactConnection(c) {
   return { mode: "rpc", ecash: { url: c.ecash.url, hasAuth: Boolean(c.ecash.auth) }, flush: { url: c.flush.url, hasAuth: Boolean(c.flush.auth) } };
 }
 
+// src/trades.js
+init_core();
+function tradeMinimum(quote, decimals, requested) {
+  const exact = (value2) => {
+    if (typeof value2 !== "string" || !/^[1-9][0-9]{0,18}$/.test(value2) || BigInt(value2) > 9223372036854775807n) throw Error("Invalid quote amount");
+    return BigInt(value2);
+  };
+  const output = exact(quote.amount_out_units), quoted = exact(quote.min_out_units);
+  if (quoted > output) throw Error("Invalid quote minimum");
+  const walletFloor = output * 9900n / 10000n;
+  const floor = quoted > walletFloor ? quoted : walletFloor;
+  const intent = requested === void 0 ? 0n : units(requested, decimals);
+  if (intent > output) throw Error("The quote no longer meets the requested minimum. Refresh the trade on the site.");
+  const minimum = intent > floor ? intent : floor;
+  if (minimum <= 0n) throw Error("Trade is too small");
+  return decimal(minimum, decimals);
+}
+function launchGuard(launch, asset, previousPool) {
+  if ((launch.id || launch.token) !== asset) throw Error("Launch asset does not match the request");
+  if ((launch.state || launch.status) !== "curve") throw Error("The launch has graduated or stopped. Refresh the trade on the site.");
+  if (!/^[a-f0-9]{64}$/.test(launch.pool_id || launch.pool || "")) throw Error("Invalid launch pool");
+  const pool = launch.pool_id || launch.pool;
+  if (previousPool && pool !== previousPool) throw Error("Launch pool changed; review a fresh trade");
+  return { asset, pool };
+}
+
 // src/background.js
 init_esm5();
 init_core();
@@ -15923,6 +16027,13 @@ async function localHistory(b) {
   }));
 }
 var uriKey = async (s) => hex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s))));
+async function consumeUri(uri) {
+  const key = await uriKey(uri), used = (await store.get("usedUris")).usedUris || {};
+  if (used[key]) throw Error("This request was already completed");
+  used[key] = Number(parseUri(uri).exp);
+  for (const [k, v] of Object.entries(used)) if (v < Math.floor(Date.now() / 1e3)) delete used[k];
+  await store.set({ usedUris: used });
+}
 function lock() {
   mnemonic = null;
   rpcBackend = null;
@@ -15961,6 +16072,11 @@ async function connectionDetails() {
   await backend();
   return redactConnection(rpcConfig);
 }
+async function releaseUnusedNodePermissions(keep = []) {
+  const defaults = new Set(chrome.runtime.getManifest().host_permissions || []), granted = await chrome.permissions.getAll();
+  const unused = (granted.origins || []).filter((origin) => !defaults.has(origin) && !keep.includes(origin));
+  if (unused.length) await chrome.permissions.remove({ origins: unused });
+}
 async function saveConnection(input) {
   if (!unlocked()) throw Error("Unlock the wallet before pairing a node");
   const draft = validateConnection(input);
@@ -15978,25 +16094,17 @@ async function saveConnection(input) {
   rpcBackend = candidate;
   connectionGeneration++;
   plan = null;
+  await releaseUnusedNodePermissions(origins);
   return { connection: redactConnection(config), report };
 }
 async function useExplorer() {
-  const old = (await store.get("rpcConnection")).rpcConnection;
-  let origins = [];
-  if (old && unlocked()) {
-    try {
-      const config = rpcConfig || await openConnection(old, mnemonic);
-      origins = [...new Set(["ecash", "flush"].map((c) => rpcOrigin(config[c].url)))];
-    } catch {
-    }
-  }
   await store.remove("rpcConnection");
   await store.set({ connectionMode: "explorer" });
   rpcBackend = null;
   rpcConfig = null;
   connectionGeneration++;
   plan = null;
-  for (const origin of origins) if (!chrome.runtime.getManifest().host_permissions.includes(origin)) await chrome.permissions.remove({ origins: [origin] });
+  await releaseUnusedNodePermissions();
   return { mode: "explorer" };
 }
 async function updateAccounts(phrase) {
@@ -16023,7 +16131,8 @@ async function prepareTrade(args, b) {
   const generation = connectionGeneration, v = await vault(), [inAsset, outAsset, coins] = await Promise.all([resolveAsset(args.from, b), resolveAsset(args.to, b), myCoins("flush", b)]);
   if (!coins.token_metadata_available && args.from !== "ECX") throw Error("Token signing metadata is temporarily unavailable; try again shortly");
   const quote = await b.api("/api/v1/quote/swap?" + new URLSearchParams({ from: args.from === "ECX" ? "ECX" : args.from, to: args.to === "ECX" ? "ECX" : args.to, amount: args.amount, slippage_bps: "100" }));
-  const minOut = args.minOut || decimal(quote.min_out_units, outAsset.decimals), pools = args.pools || quote.best.pools;
+  const minOut = tradeMinimum(quote, outAsset.decimals, args.minOut), pools = args.pools || quote.best.pools;
+  if (!Array.isArray(pools) || !pools.length || pools.length > 4) throw Error("Invalid route");
   if (pools.some((p) => !/^[a-f0-9]{64}$/.test(p))) throw Error("Invalid route");
   let side = inAsset.id === "ECX" ? "" : inAsset.id;
   for (const id of pools) {
@@ -16046,9 +16155,10 @@ async function requestPlan(request2) {
   if (request2.verb === "buy" || request2.verb === "sell") {
     const a = await resolveAsset(request2.asset, b);
     if (a.ticker !== request2.launch) throw Error("Ticker does not match asset ID");
-    const l = await b.api("/api/v1/launches/" + request2.asset);
-    if (l.state === "graduated") throw Error("Use the graduated pool");
-    return prepareTrade({ from: request2.verb === "buy" ? "ECX" : request2.asset, to: request2.verb === "buy" ? request2.asset : "ECX", amount: request2.ecx || request2.tokens, minOut: request2.min_tokens || request2.min_ecx, pools: [l.pool_id] }, b);
+    const guard = launchGuard(await b.api("/api/v1/launches/" + request2.asset), request2.asset);
+    const reviewed = await prepareTrade({ from: request2.verb === "buy" ? "ECX" : request2.asset, to: request2.verb === "buy" ? request2.asset : "ECX", amount: request2.ecx || request2.tokens, minOut: request2.min_tokens || request2.min_ecx, pools: [guard.pool] }, b);
+    reviewed.launchGuard = guard;
+    return reviewed;
   }
   if (request2.verb === "swap" || request2.verb === "route") {
     const refs = await b.api("/api/v1/assets?limit=100");
@@ -16066,7 +16176,14 @@ async function internal(m) {
     case "CONNECTION":
       return connectionDetails();
     case "PAIR_RPC":
-      return saveConnection(m.connection);
+      try {
+        return await saveConnection(m.connection);
+      } catch (error) {
+        const mode = (await store.get("connectionMode")).connectionMode;
+        if (mode !== "rpc") await releaseUnusedNodePermissions();
+        else if (rpcConfig) await releaseUnusedNodePermissions(["ecash", "flush"].map((c) => rpcOrigin(rpcConfig[c].url)));
+        throw error;
+      }
     case "USE_EXPLORER":
       return useExplorer();
     case "GENERATE":
@@ -16111,12 +16228,7 @@ async function internal(m) {
       const v = await vault();
       if (!v) throw Error("No wallet");
       const b = await backend(), results = await Promise.allSettled([b.history("ecash", v.accounts.ecash.address), b.history("flush", v.address)]);
-      const entries = results.flatMap((r) => r.status === "fulfilled" ? r.value : []), merged = new Map(entries.map((t) => [t.chain + t.txid, t]));
-      for (const t of await localHistory(b)) {
-        const chain2 = t.chain || "flush", old = merged.get(chain2 + t.txid);
-        merged.set(chain2 + t.txid, { ...old, ...t, chain: chain2 });
-      }
-      return { items: [...merged.values()].sort((a, b2) => b2.time - a.time), unavailableChains: results.flatMap((r, i) => r.status === "rejected" ? [i === 0 ? "eCash" : "Flush"] : []), localOnly: b.mode === "rpc" };
+      return { items: mergeHistory(results.flatMap((r) => r.status === "fulfilled" ? r.value : []), await localHistory(b)), unavailableChains: results.flatMap((r, i) => r.status === "rejected" ? [i === 0 ? "eCash" : "Flush"] : []), localOnly: b.mode === "rpc" };
     }
     case "PREPARE_SEND": {
       const generation = connectionGeneration, b = await backend(), chain2 = m.chain || "flush", v = await vault(), coins = await myCoins(chain2, b), a = await resolveAsset(m.asset || "ECX", b);
@@ -16136,9 +16248,16 @@ async function internal(m) {
       const approved = plan;
       plan = null;
       const b = await backend(), { signPlan: signPlan2 } = await Promise.resolve().then(() => (init_core(), core_exports));
-      if (!unlocked()) throw Error("Unlock your wallet first");
+      if (approved.launchGuard) {
+        const { asset, pool } = approved.launchGuard;
+        launchGuard(await b.api("/api/v1/launches/" + asset), asset, pool);
+      }
+      if (!unlocked() || approved.connectionGeneration !== connectionGeneration || Date.now() - approved.created > 12e4) throw Error("Wallet locked or review expired; review again");
+      if (m.uri) await consumeUri(m.uri);
+      if (!unlocked() || approved.connectionGeneration !== connectionGeneration || Date.now() - approved.created > 12e4 || m.expires && Date.now() > m.expires) throw Error("Wallet locked or request expired; review again");
+      if (m.uri) parseUri(m.uri);
       const signed = signPlan2(approved, mnemonic);
-      const entry = { ...approved.summary, chain: approved.chain || "flush", txid: signed.txid, time: Date.now(), status: "unknown", confirmations: 0, outputs: Transaction.fromHex(signed.hex).outs.flatMap((out, index) => out.script[0] === 106 ? [] : [index]) };
+      const entry = { ...approved.summary, fee_sat: approved.fee_sat, chain: approved.chain || "flush", txid: signed.txid, time: Date.now(), status: "unknown", confirmations: 0, outputs: Transaction.fromHex(signed.hex).outs.flatMap((out, index) => out.script[0] === 106 ? [] : [index]) };
       await rememberTransaction(entry);
       try {
         const result = await b.broadcast(entry.chain, signed.hex);
@@ -16192,15 +16311,10 @@ async function internal(m) {
         if (r.verb === "connect") {
           const v = await vault();
           if (!v) throw Error("No wallet");
+          await consumeUri(p.uri);
           result = { address: v.address, publicKey: v.publicKey, network: "ecashbeta" };
           if (!p.direct) await chrome.tabs.create({ url: "https://flush.markets/connect#" + new URLSearchParams({ address: v.address, nonce: r.nonce, network: "ecashbeta" }) });
-        } else result = await internal({ type: "APPROVE", planId: m.planId });
-      }
-      if (m.approved) {
-        const used = (await store.get("usedUris")).usedUris || {};
-        used[await uriKey(p.uri)] = Number(parseUri(p.uri).exp);
-        for (const [k, v] of Object.entries(used)) if (v < Math.floor(Date.now() / 1e3)) delete used[k];
-        await store.set({ usedUris: used });
+        } else result = await internal({ type: "APPROVE", planId: m.planId, uri: p.uri, expires: p.expires });
       }
       pendingReply?.(m.approved ? { ok: true, result } : { ok: false, error: "User rejected" });
       pendingReply = null;

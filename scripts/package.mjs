@@ -1,4 +1,4 @@
-import {readFile,readdir,mkdir} from 'node:fs/promises';
+import {readFile,readdir,mkdir,writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 const {version}=JSON.parse(await readFile('package.json','utf8'));
@@ -28,6 +28,8 @@ await mkdir('output',{recursive:true});
 const path='output/flush-wallet-'+version+'.zip';
 // Write a new ZIP from the explicit file list; never archive the repository.
 execFileSync('python3',['-c',
- 'import json,sys,zipfile,pathlib\nwith zipfile.ZipFile(sys.argv[1],"w",zipfile.ZIP_DEFLATED) as z:\n for name in json.loads(sys.argv[2]): z.write(pathlib.Path("extension")/name,"flush-wallet/"+name)',
+ 'import json,sys,zipfile,pathlib\nwith zipfile.ZipFile(sys.argv[1],"w",zipfile.ZIP_DEFLATED) as z:\n for name in json.loads(sys.argv[2]):\n  info=zipfile.ZipInfo("flush-wallet/"+name,(2020,1,1,0,0,0));info.create_system=3;info.external_attr=0o100644<<16;info.compress_type=zipfile.ZIP_DEFLATED;z.writestr(info,(pathlib.Path("extension")/name).read_bytes())',
  path,JSON.stringify(files)]);
-console.log(JSON.stringify({path,version,files:files.length,sha256:createHash('sha256').update(await readFile(path)).digest('hex')}));
+const sha256=createHash('sha256').update(await readFile(path)).digest('hex');
+await writeFile(path+'.sha256',sha256+'  flush-wallet-'+version+'.zip\n');
+console.log(JSON.stringify({path,version,files:files.length,sha256}));
