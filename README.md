@@ -60,6 +60,12 @@ The test used the official Flush playground: a Backbone mainchain, three Flush v
 - [Wallet after the confirmed purchase](https://seriouscatsoserious.github.io/flush-wallet/test/wallet-after.png)
 - [Transaction review](https://seriouscatsoserious.github.io/flush-wallet/test/swap-review.png)
 
+A follow-up test sent **100 FLUX** from that same browser wallet to a fresh address in the original playground funding wallet. It confirmed with **100 FLUX received**, **716.82 FLUX left in the browser**, and a **0.0000067 ECX** fee. The original swap output was spent, the token change was correct, and the combined token amount was unchanged. This transfer also used real nodes and browser signing, with no mocked responses.
+
+- [Token transfer result](docs/test/regtest-send.json)
+- [Wallet after sending](https://seriouscatsoserious.github.io/flush-wallet/test/wallet-after-send.png)
+- [Token transfer review](https://seriouscatsoserious.github.io/flush-wallet/test/send-review.png)
+
 The test compiles a separate extension under ignored `runtime/`, changing network/address constants and network labels for regtest. Production network checks stay pinned to betanet. This verifies the wallet's real signing, broadcast and token-receipt flow on local nodes; the public Explorer-funded flow is still unverified.
 
 To repeat it, obtain the official [Flush playground](https://github.com/block-fabric/backbone-flush/tree/44ee8f2cfcae3d0d91afba7a617b7c02929fc0de/contrib/playground), its Flush binaries, and Backbone binaries supporting `-testecash`. The Flush node must expose resolved `token` metadata from `gettxout` (as in Flush 7.0.1 or the browser-wallet RPC patch).
@@ -71,11 +77,14 @@ FLUSH_PLAYGROUND_ARGS='-bind=127.0.0.1 -rpcbind=127.0.0.1 -rpcallowip=127.0.0.1'
   --flush-bin /path/to/flush/bin --backbone-bin /path/to/backbone/bin \
   --base-port 49800 --block-seconds 1
 npm run test:regtest
+npm run test:regtest:send  # follow-up: send 100 of the purchased FLUX back to the funding wallet
 /path/to/backbone-flush/contrib/playground/flush-playground.sh \
   --dir "$PWD/runtime/regtest-playground" stop
 ```
 
 Stop the playground even if a test fails. Use `FLUSH_PLAYGROUND_DIR` when the playground data is elsewhere. The test refuses any mainchain or sidechain that is not regtest with the expected genesis and slot 46. Screenshots and the JSON result are regenerated under `output/`.
+
+The send test reopens the previous browser profile and checks that it still holds the original swap balance before sending. Run it while that same playground is running; do not reset the data between the swap and transfer. It refuses an accidental repeat after the token balance changes.
 
 ## What works in this preview
 

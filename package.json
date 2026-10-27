@@ -9,6 +9,7 @@
     "test:browser": "node test/browser.mjs",
     "test:advanced": "node test/advanced-browser.mjs",
     "test:regtest": "node test/regtest.mjs",
+    "test:regtest:send": "node test/regtest-send.mjs",
     "demo": "npm run build && node scripts/demo.mjs"
   },
   "dependencies": {
