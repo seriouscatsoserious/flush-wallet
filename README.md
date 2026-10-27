@@ -11,6 +11,7 @@ The interface follows the Flush site's colours, official mark, Barlow typography
 ## Demo
 
 - [Online screen viewer](https://seriouscatsoserious.github.io/flush-wallet/) — browse all 24 screens on mobile or desktop, filter by flow, and open each capture at full resolution.
+- [Browser and real-node QA results](https://seriouscatsoserious.github.io/flush-wallet/test/qa/) — passed checks, public-network blockers, transaction evidence, and full-resolution browser captures.
 - [Full-resolution collage](docs/demo/flush-wallet-collage.png)
 - [PDF collage](docs/demo/flush-wallet-collage.pdf)
 - [Interactive gallery](docs/demo/gallery.html) — download and open locally; fonts and images are embedded. Filter by flow or click a screen to see it at full size.
@@ -85,6 +86,43 @@ npm run test:regtest:send  # follow-up: send 100 of the purchased FLUX back to t
 Stop the playground even if a test fails. Use `FLUSH_PLAYGROUND_DIR` when the playground data is elsewhere. The test refuses any mainchain or sidechain that is not regtest with the expected genesis and slot 46. Screenshots and the JSON result are regenerated under `output/`.
 
 The send test reopens the previous browser profile and checks that it still holds the original swap balance before sending. Run it while that same playground is running; do not reset the data between the swap and transfer. It refuses an accidental repeat after the token balance changes.
+
+## Browser and node QA (0.3.1)
+
+[The published QA report](https://seriouscatsoserious.github.io/flush-wallet/test/qa/) contains **57 passed checks, zero failed checks, and two blocked public-network checks**, plus **24 passing unit tests**. It records actual local-chain broadcasts separately from injected connection failures and live public API reads.
+
+Coverage includes funded seed recovery in a fresh profile, L1 and Flush ECX sends, an actual L1 deposit, selling tokens, a two-pool token trade, six-decimal transfers, full token-balance sends, missing fee coins, pending/confirmed status, price movement past the approved minimum, website approvals/cancellation/replay, real Chrome permission denial/grant/revocation, extension update across restart, real auto-lock timing, and interrupted/concurrent sends.
+
+Testing fixed Flush deposit maturity handling, durable outgoing-transaction history and concurrent refreshes, stale/expired approvals, and persistent replay protection. The production wallet still refuses the local regtest nodes. [The site's cancellation fix](https://github.com/block-fabric/flush-markets/pull/1) is a draft upstream PR; website integration tests used the proposed fix, not the unmodified production site.
+
+Two public-network checks remain blocked: the L1 Explorer address endpoints return HTTP 405, and the fresh public betanet wallet has no test ECX for a funded Explorer-backed purchase/transfer. Public Flush balances, token metadata, images, history, quotes, and rejection of invalid broadcast bytes were checked live. No funded public-chain transaction is claimed.
+
+To reproduce the additional local checks, keep the playground running after the initial swap/send tests. Start validator 0 with `FLUSH_PLAYGROUND_ARGS0='-publicapi=49830 -publicapiorigin=https://flush.markets'` so the site test can use its real read-only API. Older Flush builds need the [read-only gettxout metadata patch](test/support/gettxout-metadata.patch), including explicit `token: null` on ordinary outputs; current nodes exposing that contract do not need the patch.
+
+Run these sequentially (they reuse the funded browser profile):
+
+```sh
+node test/support/prepare-qa.mjs
+npm run test:qa:core
+npm run test:qa:assets
+npm run test:qa:security
+npm run test:qa:lifecycle
+npm run test:qa:balances
+npm run test:qa:permissions
+npm run test:qa:site
+npm run test:explorer
+```
+
+The permission test requires Linux `Xvfb` and `xdotool`. It uses actual Chrome dialogs on display `:101`; it does not mock Chrome's permission API. The website test requires a checkout of the site built with `PUBLIC_API_BASE=/api/v1 PUBLIC_NETWORK=regtest PUBLIC_SLOT=46 npm run build`; set `FLUSH_SITE_BUILD` if its output is elsewhere. Requests to the website's origin are served from that build and its local node API, without starting another web server. Apply the draft cancellation fix before expecting the site test to pass.
+
+The test copy uses regtest addresses, genesis/slot checks, and Backbone regtest's replay marker; production network parameters are unchanged. Stop the playground even after a failed test. Then generate the publication files:
+
+```sh
+node --test --test-reporter=tap test/*.test.mjs > output/unit-tests.tap
+npm run report:qa
+```
+
+The report generator refuses to publish while the playground PID file remains. No browser profiles, recovery words, vaults, passwords, or node credentials are included in the published evidence.
 
 ## What works in this preview
 

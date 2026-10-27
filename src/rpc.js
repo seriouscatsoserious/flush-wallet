@@ -29,17 +29,17 @@ export function parseRpcJSON(text){
  }
  return JSON.parse(out);
 }
-const READS=new Set(['getblockchaininfo','getmainchaininfo','getblockhash','scantxoutset','gettxout','getasset','listassets','getpool','getlaunch','quoteroute','getassetlogo','sendrawtransaction']);
+const READS=new Set(['getblockchaininfo','getmainchaininfo','getblockhash','getrawtransaction','getmempoolentry','scantxoutset','gettxout','getasset','listassets','getpool','getlaunch','quoteroute','getassetlogo','sendrawtransaction']);
 export function createRpcBackend(input,{fetcher=fetch}={}){
  const config=validateConnection(input),scans={ecash:Promise.resolve(),flush:Promise.resolve()},coinCache=new Map(),assets=new Map();
  async function rpc(chain,method,params=[]){
   if(!READS.has(method))throw Error('RPC method is not allowed');const node=config[chain];if(!node)throw Error('Unknown chain');
   const headers={'content-type':'application/json'};
   if(node.auth)headers.Authorization='Basic '+btoa(String.fromCharCode(...new TextEncoder().encode(node.auth)));
-  let r;try{r=await fetcher(node.url,{method:'POST',headers,body:JSON.stringify({jsonrpc:'2.0',id:crypto.randomUUID(),method,params}),redirect:'error',cache:'no-store',signal:AbortSignal.timeout(30000)});}catch{throw Error('Could not reach the '+(chain==='ecash'?'eCash':'Flush')+' RPC node');}
-  if(r.status===401||r.status===403)throw Error('RPC authentication or node access was refused');
+  let r;try{r=await fetcher(node.url,{method:'POST',headers,body:JSON.stringify({jsonrpc:'2.0',id:crypto.randomUUID(),method,params}),redirect:'error',cache:'no-store',signal:AbortSignal.timeout(30000)});}catch{const error=Error('Could not reach the '+(chain==='ecash'?'eCash':'Flush')+' RPC node');error.unavailable=true;throw error;}
+  if(r.status===401||r.status===403){const error=Error('RPC authentication or node access was refused');error.unavailable=true;throw error;}
   const text=await r.text();let j;try{j=parseRpcJSON(text);}catch{throw Error('Node returned an invalid RPC response');}
-  if(j.error)throw Error('RPC '+method+': '+String(j.error.message||'request failed').slice(0,200));if(!r.ok)throw Error('RPC request failed (HTTP '+r.status+')');return j.result;
+  if(j.error){const error=Error('RPC '+method+': '+String(j.error.message||'request failed').slice(0,200));error.rejected=method==='sendrawtransaction';throw error;}if(!r.ok)throw Error('RPC request failed (HTTP '+r.status+')');return j.result;
  }
  async function status(){
   const [l1,l2,l1hash,l2hash,main]=await Promise.all([rpc('ecash','getblockchaininfo'),rpc('flush','getblockchaininfo'),rpc('ecash','getblockhash',[BETANET_CHECKPOINT.height]),rpc('flush','getblockhash',[0]),rpc('flush','getmainchaininfo')]);
@@ -85,5 +85,13 @@ export function createRpcBackend(input,{fetcher=fetch}={}){
  async function holdings(addr){const c=await coins('flush',addr),byId=new Map();for(const u of c.utxos)if(u.token?.kind===0)byId.set(u.token.id,(byId.get(u.token.id)||0n)+BigInt(u.token.amount_units));return {items:[...byId].map(([asset_id,n])=>({asset_id,kind:'asset',amount_units:n.toString()})),unavailable:!c.token_metadata_available};}
  async function logo(id){try{const l=await rpc('flush','getassetlogo',[ref(id)]);if(!['image/png','image/jpeg'].includes(l.mime)||l.base64?.length>44000||!/^[A-Za-z0-9+/]*={0,2}$/.test(l.base64||''))return null;return 'data:'+l.mime+';base64,'+l.base64;}catch{return null;}}
  async function broadcast(chain,raw){const tx=Transaction.fromHex(raw),burn=tx.outs.filter(o=>o.script[0]===106).reduce((s,o)=>s+o.value,0n);const txid=await rpc(chain,'sendrawtransaction',[raw,'0.001',decimal(burn)]);if(txid!==tx.getId())throw Error('Node returned an unexpected transaction ID');coinCache.clear();return {txid};}
- return {mode:'rpc',status,coins,api,holdings,logo,broadcast,history:async()=>[]};
+ async function transactionStatus(chain,txid,outputs=[0,1,2,3]){
+  if(!/^[a-f0-9]{64}$/.test(txid))throw Error('Invalid transaction ID');
+  try{const tx=await rpc(chain,'getrawtransaction',[txid,true]);if(tx?.txid===txid)return {status:tx.confirmations>0?'confirmed':'pending',confirmations:tx.confirmations||0};}catch(error){if(error.unavailable)return {status:'unknown',confirmations:0,unavailable:true};}
+  try{await rpc(chain,'getmempoolentry',[txid]);return {status:'pending',confirmations:0};}catch(error){if(error.unavailable)return {status:'unknown',confirmations:0,unavailable:true};}
+  // Nodes without txindex still expose our unspent recipient/change outputs.
+  for(const index of outputs.slice(0,16)){try{const out=await rpc(chain,'gettxout',[txid,index,true]);if(out)return {status:out.confirmations>0?'confirmed':'pending',confirmations:out.confirmations||0};}catch(error){if(error.unavailable)return {status:'unknown',confirmations:0,unavailable:true};}}
+  return {status:'unknown',confirmations:0};
+ }
+ return {mode:'rpc',status,coins,api,holdings,logo,broadcast,transactionStatus,history:async()=>[]};
 }

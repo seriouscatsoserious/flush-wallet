@@ -1,4 +1,4 @@
-Flush Wallet 0.3.0 — Chrome extension, betanet preview
+Flush Wallet 0.3.1 — Chrome extension, betanet preview
 
 INSTALL
 1. Extract flush-wallet.zip.

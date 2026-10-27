@@ -1,0 +1,154 @@
+TAP version 13
+# Subtest: Explorer quotes use the real public quote endpoint while market reads stay on Explorer
+ok 1 - Explorer quotes use the real public quote endpoint while market reads stay on Explorer
+  ---
+  duration_ms: 15.015275
+  type: 'test'
+  ...
+# Subtest: Explorer outputs explicitly marked unspendable never enter transaction funding
+ok 2 - Explorer outputs explicitly marked unspendable never enter transaction funding
+  ---
+  duration_ms: 48.09365
+  type: 'test'
+  ...
+# Subtest: BIP84 derivation and exact decimal amounts
+ok 3 - BIP84 derivation and exact decimal amounts
+  ---
+  duration_ms: 0.989288
+  type: 'test'
+  ...
+# Subtest: vault encryption roundtrip, wrong password, tamper and metadata mismatch
+ok 4 - vault encryption roundtrip, wrong password, tamper and metadata mismatch
+  ---
+  duration_ms: 384.320434
+  type: 'test'
+  ...
+# Subtest: deposit checksum matches upstream reference vectors
+ok 5 - deposit checksum matches upstream reference vectors
+  ---
+  duration_ms: 0.80303
+  type: 'test'
+  ...
+# Subtest: Core VARINT encoding boundary cases
+ok 6 - Core VARINT encoding boundary cases
+  ---
+  duration_ms: 0.140142
+  type: 'test'
+  ...
+# Subtest: native send is signed locally with SIGHASH_ALL and conserves all satoshis
+ok 7 - native send is signed locally with SIGHASH_ALL and conserves all satoshis
+  ---
+  duration_ms: 17.936844
+  type: 'test'
+  ...
+# Subtest: token send conserves token units and excludes other assets and controls from funding
+ok 8 - token send conserves token units and excludes other assets and controls from funding
+  ---
+  duration_ms: 13.445131
+  type: 'test'
+  ...
+# Subtest: swap marker binds absolute minimum, input amount, pool and our receiving script
+ok 9 - swap marker binds absolute minimum, input amount, pool and our receiving script
+  ---
+  duration_ms: 11.107344
+  type: 'test'
+  ...
+# Subtest: URI checks network, expiry, callback, duplicates, hidden text and unsupported operations
+ok 10 - URI checks network, expiry, callback, duplicates, hidden text and unsupported operations
+  ---
+  duration_ms: 0.82407
+  type: 'test'
+  ...
+# Subtest: trade requests require explicit floors, canonical IDs and valid escapes
+ok 11 - trade requests require explicit floors, canonical IDs and valid escapes
+  ---
+  duration_ms: 0.396782
+  type: 'test'
+  ...
+# Subtest: L1 uses BIP84 Bitcoin-style eCash addresses; existing Flush identity is unchanged
+ok 12 - L1 uses BIP84 Bitcoin-style eCash addresses; existing Flush identity is unchanged
+  ---
+  duration_ms: 0.635297
+  type: 'test'
+  ...
+# Subtest: L1 sends sign with the L1 key and bind all outputs
+ok 13 - L1 sends sign with the L1 key and bind all outputs
+  ---
+  duration_ms: 24.839191
+  type: 'test'
+  ...
+# Subtest: new vault restores both accounts; legacy vaults still decrypt to the same seed
+ok 14 - new vault restores both accounts; legacy vaults still decrypt to the same seed
+  ---
+  duration_ms: 180.246777
+  type: 'test'
+  ...
+# Subtest: recovery quiz chooses three distinct positions and rejects wrong, missing or duplicate answers
+ok 15 - recovery quiz chooses three distinct positions and rejects wrong, missing or duplicate answers
+  ---
+  duration_ms: 0.408744
+  type: 'test'
+  ...
+# Subtest: Flush deposit credits can fund the next block while L1 coinbases mature after 100 confirmations
+ok 16 - Flush deposit credits can fund the next block while L1 coinbases mature after 100 confirmations
+  ---
+  duration_ms: 56.607016
+  type: 'test'
+  ...
+# Subtest: RPC URL validation restricts HTTP to loopback and keeps credentials out of URLs
+ok 17 - RPC URL validation restricts HTTP to loopback and keeps credentials out of URLs
+  ---
+  duration_ms: 0.804223
+  type: 'test'
+  ...
+# Subtest: RPC JSON parsing preserves decimal units and ignores apparent fields inside strings
+ok 18 - RPC JSON parsing preserves decimal units and ignores apparent fields inside strings
+  ---
+  duration_ms: 0.338092
+  type: 'test'
+  ...
+# Subtest: RPC credentials are encrypted and bound to the wallet seed
+ok 19 - RPC credentials are encrypted and bound to the wallet seed
+  ---
+  duration_ms: 30.427101
+  type: 'test'
+  ...
+# Subtest: pairing verifies eCash fork checkpoint and Flush genesis and reports auth failure
+ok 20 - pairing verifies eCash fork checkpoint and Flush genesis and reports auth failure
+  ---
+  duration_ms: 14.256307
+  type: 'test'
+  ...
+# Subtest: RPC UTXOs and holdings use exact resolved token state, never node wallet keys
+ok 21 - RPC UTXOs and holdings use exact resolved token state, never node wallet keys
+  ---
+  duration_ms: 2.165957
+  type: 'test'
+  ...
+# Subtest: RPC adapts asset metadata, pool identities, logos and integer slippage floors
+ok 22 - RPC adapts asset metadata, pool identities, logos and integer slippage floors
+  ---
+  duration_ms: 1.018232
+  type: 'test'
+  ...
+# Subtest: RPC broadcasts only locally signed raw transactions to the chosen chain
+ok 23 - RPC broadcasts only locally signed raw transactions to the chosen chain
+  ---
+  duration_ms: 28.439637
+  type: 'test'
+  ...
+# Subtest: token annotations validate kind, ID and exact bounded unit strings
+ok 24 - token annotations validate kind, ID and exact bounded unit strings
+  ---
+  duration_ms: 0.213329
+  type: 'test'
+  ...
+1..24
+# tests 24
+# suites 0
+# pass 24
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 590.510766

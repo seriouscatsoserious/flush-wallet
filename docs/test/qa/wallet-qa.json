@@ -1,0 +1,54 @@
+{
+  "startedAt": "2026-10-27T10:37:30.083Z",
+  "network": "local regtest",
+  "checks": [
+    {
+      "name": "Read recovery words from the existing funded wallet after password authentication",
+      "status": "passed",
+      "address": "rsc1qgux4y9sjclq8ql2505208c573dw8g07lrngzen"
+    },
+    {
+      "name": "Restore a funded 12-word seed in a fresh Chrome profile",
+      "status": "passed",
+      "address": "rsc1qgux4y9sjclq8ql2505208c573dw8g07lrngzen",
+      "tokenUnits": "71682",
+      "nativeSat": "108997026"
+    },
+    {
+      "name": "Receive native L1 ECX into the recovered browser wallet",
+      "status": "passed",
+      "txid": "493530d4859be43d9ce8a99c6fc2b48a1d3bd475c15fdb0b63957e3121cd62de",
+      "receivedECX": "2",
+      "address": "rchn1qp0xfmsxc2w3wr6vavhr7peuu365vf033p8749m"
+    },
+    {
+      "name": "Send native ECX on ecash with confirmed change",
+      "status": "passed",
+      "txid": "cf1d632847de45eca267e782bf791a059d5e09999ef51c7aaddf4ee2a7bd19cb",
+      "amountECX": "0.01",
+      "feeECX": "0.00000286"
+    },
+    {
+      "name": "Send native ECX on flush with confirmed change",
+      "status": "passed",
+      "txid": "c2d5a4d6f513460c4b895ec6db09eca422164938239ef8f397f8aaff1846638e",
+      "amountECX": "0.01",
+      "feeECX": "0.00000286"
+    },
+    {
+      "name": "Deposit generated L1 ECX into the exact browser receive address",
+      "status": "passed",
+      "txid": "3987c66606365cc99a27e01fcab5c529f9bc3845dc42c657a12743615923b559",
+      "destination": "s46_rsc1qgux4y9sjclq8ql2505208c573dw8g07lrngzen_8d1119",
+      "receivedECX": "0.2"
+    },
+    {
+      "name": "Sell FLUX back to ECX through the wallet",
+      "status": "passed",
+      "txid": "6b32f1f2a77098e38fced14976cb3fbd50b91e54d0801a1019c171f732fd6a2f",
+      "soldFLUX": "50",
+      "netReceivedECX": "0.00611363"
+    }
+  ],
+  "passed": true
+}

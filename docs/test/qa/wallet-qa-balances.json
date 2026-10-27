@@ -1,0 +1,38 @@
+{
+  "startedAt": "2026-10-27T11:07:16.562Z",
+  "checks": [
+    {
+      "name": "Receive an externally sent token into a wallet with no native coins",
+      "status": "passed",
+      "receivedFLUX": "1",
+      "nativeECX": "0"
+    },
+    {
+      "name": "A token balance alone cannot pay the transaction network fee",
+      "status": "passed",
+      "noFundsMoved": true
+    },
+    {
+      "name": "After topping up ECX, send the entire token balance with no token change",
+      "status": "passed",
+      "txid": "38798838f62f2b1c18f58922d1de6469567b04c8f7f66548c5ca4d7fc66752df",
+      "recipientFLUX": "1",
+      "senderFLUX": "0"
+    },
+    {
+      "name": "Activity moves from pending to confirmed after real block production resumes",
+      "status": "passed",
+      "txid": "52695337f837b22b57e0b3a2da7fb6a0f3971cfe2cacba88f86b89766ac46941",
+      "pendingObserved": true,
+      "confirmedObserved": true
+    },
+    {
+      "name": "A real price move cannot settle a swap below its approved minimum",
+      "status": "passed",
+      "nodeRejected": true,
+      "error": "RPC sendrawtransaction: ba-swap-price",
+      "noFundsMoved": true
+    }
+  ],
+  "passed": true
+}

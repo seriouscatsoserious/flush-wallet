@@ -1,0 +1,24 @@
+{
+  "startedAt": "2026-10-27T10:58:14.645Z",
+  "display": ":101",
+  "actualChromePermissions": true,
+  "checks": [
+    {
+      "name": "Actual Chrome permission denial keeps the prior connection",
+      "status": "passed"
+    },
+    {
+      "name": "Actual Chrome permission grant pairs real local nodes",
+      "status": "passed"
+    },
+    {
+      "name": "Switching back deletes RPC credentials and revokes real Chrome host access",
+      "status": "passed"
+    },
+    {
+      "name": "Unpacked extension update across Chrome restart preserves the encrypted wallet and locks the signer",
+      "status": "passed"
+    }
+  ],
+  "passed": true
+}

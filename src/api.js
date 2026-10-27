@@ -7,7 +7,7 @@ async function request(url,options={},json=true){
  const r=await fetch(url,{...options,signal:AbortSignal.timeout(30000)});
  const text=await r.text();let data=text;
  if(json){try{data=JSON.parse(text);}catch{throw Error('Explorer returned an invalid response');}}
- if(!r.ok)throw Error(typeof data?.error==='string'?data.error:data?.error?.message||String(text).slice(0,180)||'Explorer unavailable');
+ if(!r.ok){const error=Error(typeof data?.error==='string'?data.error:data?.error?.message||String(text).slice(0,180)||'Explorer unavailable');error.httpStatus=r.status;throw error;}
  return data;
 }
 // The Explorer proxies market reads, but deliberately excludes REST quote routes.
@@ -68,8 +68,11 @@ export async function explorerHistory(chain,addr){
 export async function explorerBroadcast(chain,raw){
  const tx=Transaction.fromHex(raw),burn=tx.outs.filter(o=>o.script[0]===106).reduce((s,o)=>s+o.value,0n);
  const query=new URLSearchParams({maxfeerate:'0.001',maxburnamount:decimal(burn)});
- const result=await request(explorerBase(chain)+'/api/tx?'+query,{method:'POST',headers:{'content-type':'text/plain'},body:raw},false);
+ let result;try{result=await request(explorerBase(chain)+'/api/tx?'+query,{method:'POST',headers:{'content-type':'text/plain'},body:raw},false);}catch(error){error.rejected=error.httpStatus>=400&&error.httpStatus<500;throw error;}
  const txid=result.trim();if(!/^[a-f0-9]{64}$/.test(txid)||txid!==tx.getId())throw Error('Explorer returned an unexpected transaction ID');
  return {txid};
 }
-export function createExplorerBackend(){return {mode:'explorer',api,status:explorerStatus,coins:explorerCoins,holdings:explorerHoldings,broadcast:explorerBroadcast,history:explorerHistory,logo:async id=>tokenLogo(id)};}
+export async function explorerTransactionStatus(chain,txid){
+ try{const tx=await request(explorerBase(chain)+'/api/tx/'+txid);if(tx.txid!==txid)throw Error('Transaction ID mismatch');return {status:tx.status?.confirmed?'confirmed':'pending',confirmations:tx.status?.confirmed?1:0};}catch(error){return {status:'unknown',confirmations:0,unavailable:error.httpStatus!==404};}
+}
+export function createExplorerBackend(){return {mode:'explorer',api,status:explorerStatus,coins:explorerCoins,holdings:explorerHoldings,broadcast:explorerBroadcast,transactionStatus:explorerTransactionStatus,history:explorerHistory,logo:async id=>tokenLogo(id)};}

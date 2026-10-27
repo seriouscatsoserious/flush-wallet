@@ -1,6 +1,6 @@
 {
   "name": "flush-browser-wallet",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,16 @@
     "test:advanced": "node test/advanced-browser.mjs",
     "test:regtest": "node test/regtest.mjs",
     "test:regtest:send": "node test/regtest-send.mjs",
-    "demo": "npm run build && node scripts/demo.mjs"
+    "demo": "npm run build && node scripts/demo.mjs",
+    "test:qa:core": "node test/wallet-qa.mjs",
+    "test:qa:assets": "node test/wallet-qa-extended.mjs",
+    "test:qa:security": "node test/wallet-qa-security.mjs",
+    "test:qa:site": "node test/wallet-qa-site.mjs",
+    "test:qa:permissions": "node test/wallet-qa-permissions.mjs",
+    "test:qa:lifecycle": "node test/wallet-qa-lifecycle.mjs",
+    "test:qa:balances": "node test/wallet-qa-balances.mjs",
+    "test:explorer": "node test/public-explorer.mjs",
+    "report:qa": "node scripts/qa-report.mjs"
   },
   "dependencies": {
     "@noble/curves": "^2.0.1",
@@ -21,6 +30,7 @@
   },
   "devDependencies": {
     "esbuild": "^0.25.11",
-    "playwright": "^1.56.1"
+    "playwright": "^1.56.1",
+    "pngjs": "^5.0.0"
   }
 }

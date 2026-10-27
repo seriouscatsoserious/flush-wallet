@@ -1,0 +1,432 @@
+{
+  "generatedAt": "2026-10-27T11:20:54.227Z",
+  "version": "0.3.1",
+  "counts": {
+    "passed": 57,
+    "failed": 0,
+    "blocked": 2
+  },
+  "unitTests": 24,
+  "temporaryProcessesStopped": true,
+  "publicFundedTransferTested": false,
+  "siteFix": {
+    "url": "https://github.com/block-fabric/flush-markets/pull/1",
+    "state": "Draft PR; tested locally, not deployed upstream"
+  },
+  "groups": [
+    {
+      "file": "wallet-qa.json",
+      "title": "Recovery, transfers and deposits",
+      "environment": "Real local nodes",
+      "checks": [
+        {
+          "name": "Read recovery words from the existing funded wallet after password authentication",
+          "status": "passed",
+          "address": "rsc1qgux4y9sjclq8ql2505208c573dw8g07lrngzen"
+        },
+        {
+          "name": "Restore a funded 12-word seed in a fresh Chrome profile",
+          "status": "passed",
+          "address": "rsc1qgux4y9sjclq8ql2505208c573dw8g07lrngzen",
+          "tokenUnits": "71682",
+          "nativeSat": "108997026"
+        },
+        {
+          "name": "Receive native L1 ECX into the recovered browser wallet",
+          "status": "passed",
+          "txid": "493530d4859be43d9ce8a99c6fc2b48a1d3bd475c15fdb0b63957e3121cd62de",
+          "receivedECX": "2",
+          "address": "rchn1qp0xfmsxc2w3wr6vavhr7peuu365vf033p8749m"
+        },
+        {
+          "name": "Send native ECX on ecash with confirmed change",
+          "status": "passed",
+          "txid": "cf1d632847de45eca267e782bf791a059d5e09999ef51c7aaddf4ee2a7bd19cb",
+          "amountECX": "0.01",
+          "feeECX": "0.00000286"
+        },
+        {
+          "name": "Send native ECX on flush with confirmed change",
+          "status": "passed",
+          "txid": "c2d5a4d6f513460c4b895ec6db09eca422164938239ef8f397f8aaff1846638e",
+          "amountECX": "0.01",
+          "feeECX": "0.00000286"
+        },
+        {
+          "name": "Deposit generated L1 ECX into the exact browser receive address",
+          "status": "passed",
+          "txid": "3987c66606365cc99a27e01fcab5c529f9bc3845dc42c657a12743615923b559",
+          "destination": "s46_rsc1qgux4y9sjclq8ql2505208c573dw8g07lrngzen_8d1119",
+          "receivedECX": "0.2"
+        },
+        {
+          "name": "Sell FLUX back to ECX through the wallet",
+          "status": "passed",
+          "txid": "6b32f1f2a77098e38fced14976cb3fbd50b91e54d0801a1019c171f732fd6a2f",
+          "soldFLUX": "50",
+          "netReceivedECX": "0.00611363"
+        }
+      ],
+      "checkedAt": "2026-10-27T10:37:30.083Z"
+    },
+    {
+      "file": "wallet-qa-extended.json",
+      "title": "Multiple assets and lost responses",
+      "environment": "Real local nodes + injected connection failure",
+      "checks": [
+        {
+          "name": "Trade across two real pools into an asset with six decimal places",
+          "status": "passed",
+          "txid": "c0f1ee390383fcb3fa668ca444a8af102b520491294a9e5c9f64874ce8bbaef9",
+          "spentFLUX": "25",
+          "receivedPRISM": "30.484598",
+          "metadataEscaped": true,
+          "logoLoaded": true
+        },
+        {
+          "name": "Reject malformed amounts and wrong-network recipients before signing",
+          "status": "passed",
+          "cases": 5
+        },
+        {
+          "name": "Submit a minimum-denomination token transfer with exact token change",
+          "status": "passed",
+          "txid": "96bbb3e6a4cc482499f6273fd960ce71e2c07c2d7565c588e8f7422587726622",
+          "receivedUnits": "1"
+        },
+        {
+          "name": "Keep a durable transaction record when the node accepts but the response is lost",
+          "status": "passed",
+          "txid": "b2587969d724d2345be27b5315d2b5fe760c9d0628c8585ca05ea9abae49988c"
+        }
+      ],
+      "checkedAt": "2026-10-27T10:46:29.213Z"
+    },
+    {
+      "file": "wallet-qa-security.json",
+      "title": "Recovery and signer security",
+      "environment": "Actual Chrome, real timers and worker termination",
+      "checks": [
+        {
+          "name": "Cold installation keeps the encrypted funded wallet locked",
+          "status": "passed",
+          "address": "rsc1qgux4y9sjclq8ql2505208c573dw8g07lrngzen"
+        },
+        {
+          "name": "Wrong password cannot unlock or change the vault",
+          "status": "passed"
+        },
+        {
+          "name": "Recovery reveal requires authentication and hides again after 30 seconds",
+          "status": "passed",
+          "hiddenAfterSeconds": 32
+        },
+        {
+          "name": "Real two-minute auto-lock invalidates an outstanding transaction",
+          "status": "passed",
+          "elapsedSeconds": 129,
+          "noFundsMoved": true
+        },
+        {
+          "name": "Secrets remain encrypted and never appear in RPC request bodies",
+          "status": "passed",
+          "vaultEncrypted": true,
+          "credentialsEncrypted": true,
+          "seedSent": false,
+          "passwordSent": false
+        },
+        {
+          "name": "Service-worker termination locks the signer and preserves wallet data",
+          "status": "passed"
+        },
+        {
+          "name": "Full Chrome restart preserves both chain identities and requires unlocking",
+          "status": "passed"
+        },
+        {
+          "name": "Invalid recovery phrases cannot create a wallet",
+          "status": "passed"
+        },
+        {
+          "name": "Import a valid 24-word seed into both chain accounts",
+          "status": "passed",
+          "wordCount": 24
+        }
+      ],
+      "checkedAt": "2026-10-27T10:48:25.270Z"
+    },
+    {
+      "file": "wallet-qa-site.json",
+      "title": "Website connection and approvals",
+      "environment": "Actual site build + real local nodes; includes the proposed site fix",
+      "checks": [
+        {
+          "name": "Reject a connection request from the actual website",
+          "status": "passed",
+          "fundsMoved": false
+        },
+        {
+          "name": "Connect shares only a public address and grants no transaction authority",
+          "status": "passed",
+          "address": "rsc1qgux4y9sjclq8ql2505208c573dw8g07lrngzen"
+        },
+        {
+          "name": "A website cannot request seed export or unsupported wallet methods",
+          "status": "passed",
+          "blocked": true
+        },
+        {
+          "name": "Wrong-network and expired website requests are refused",
+          "status": "passed",
+          "cases": 2
+        },
+        {
+          "name": "Approve an actual website-built trade and verify its on-chain receipt",
+          "status": "passed",
+          "txid": "ee6193f64d572e5fbca42c961a6f6cd5f0175b2e27a7c096c903ff718ca81426",
+          "actualSiteCode": true,
+          "actualNodeData": true
+        },
+        {
+          "name": "Completed website transaction requests cannot be replayed",
+          "status": "passed",
+          "blocked": true
+        },
+        {
+          "name": "A request that expires while its approval is open cannot be approved",
+          "status": "passed",
+          "expiredDuringReview": true,
+          "requestRejected": true
+        },
+        {
+          "name": "A terminated approval worker does not leave a stale request blocking reconnection",
+          "status": "passed",
+          "interruptedRequestRejected": true,
+          "reconnectionSucceeded": true
+        },
+        {
+          "name": "Replay protection survives clearing volatile browser session state",
+          "status": "passed",
+          "persistentReplayProtection": true
+        },
+        {
+          "name": "Simultaneous website requests cannot open competing approval windows",
+          "status": "passed",
+          "approvalWindows": 1,
+          "requestsAccepted": 1,
+          "secondRequestRefused": true
+        }
+      ],
+      "checkedAt": "2026-10-27T11:16:02.929Z"
+    },
+    {
+      "file": "wallet-qa-permissions.json",
+      "title": "Chrome permissions and update",
+      "environment": "Actual Chrome dialogs on an isolated display",
+      "checks": [
+        {
+          "name": "Actual Chrome permission denial keeps the prior connection",
+          "status": "passed"
+        },
+        {
+          "name": "Actual Chrome permission grant pairs real local nodes",
+          "status": "passed"
+        },
+        {
+          "name": "Switching back deletes RPC credentials and revokes real Chrome host access",
+          "status": "passed"
+        },
+        {
+          "name": "Unpacked extension update across Chrome restart preserves the encrypted wallet and locks the signer",
+          "status": "passed"
+        }
+      ],
+      "checkedAt": "2026-10-27T10:58:14.645Z"
+    },
+    {
+      "file": "wallet-qa-lifecycle.json",
+      "title": "Interrupted and concurrent transactions",
+      "environment": "Real local nodes + controlled interruption tests",
+      "checks": [
+        {
+          "name": "Closing a reviewed transfer does not send it",
+          "status": "passed",
+          "noFundsMoved": true
+        },
+        {
+          "name": "Rapid double-click signs and broadcasts exactly one transaction",
+          "status": "passed",
+          "txid": "1ec859fba1dec43fd4b8b444c113d839484f0d9484075a228ea77b0862ba7e62",
+          "broadcasts": 1
+        },
+        {
+          "name": "A connection change invalidates an approval already open in another window",
+          "status": "passed"
+        },
+        {
+          "name": "Offline errors stay visible and Settings remains reachable",
+          "status": "passed"
+        },
+        {
+          "name": "Missing resolved token metadata blocks token signing but permits native ECX funding",
+          "status": "passed",
+          "tokenSigningBlocked": true,
+          "nativeFundingAvailable": true
+        },
+        {
+          "name": "A failed pre-submission connection can retry the same transaction without paying twice",
+          "status": "passed",
+          "txid": "44f51610eb0e133e2d216ee1c4e645d5ec9d36156b5c3541ed90ef7982657d8c",
+          "identicalRetry": true,
+          "receivedOnce": true
+        },
+        {
+          "name": "Concurrent Activity refresh cannot erase a newly approved transaction",
+          "status": "passed",
+          "txid": "4edd8e8a2ac9a4d855070383316736a6cf8bb12187b837ee8dcf9533cdc8d730",
+          "preservedDuringConcurrentRefresh": true
+        },
+        {
+          "name": "Worker termination after node acceptance preserves the outgoing transaction",
+          "status": "passed",
+          "txid": "9dd2d0859778956018bffa82d03bd40ab6d00146f8475a6a32bcd60bcd8efa18",
+          "confirmedAfterRestart": true
+        },
+        {
+          "name": "A dust-sized native output is rejected without moving funds",
+          "status": "passed",
+          "nodeRejected": true,
+          "noFundsMoved": true
+        },
+        {
+          "name": "The production RPC verifier refuses these local test nodes",
+          "status": "passed",
+          "productionNetworkGuardUnchanged": true
+        }
+      ],
+      "checkedAt": "2026-10-27T11:01:58.074Z"
+    },
+    {
+      "file": "wallet-qa-balances.json",
+      "title": "Fees, pending transactions and slippage",
+      "environment": "Real local nodes and a real adverse price move",
+      "checks": [
+        {
+          "name": "Receive an externally sent token into a wallet with no native coins",
+          "status": "passed",
+          "receivedFLUX": "1",
+          "nativeECX": "0"
+        },
+        {
+          "name": "A token balance alone cannot pay the transaction network fee",
+          "status": "passed",
+          "noFundsMoved": true
+        },
+        {
+          "name": "After topping up ECX, send the entire token balance with no token change",
+          "status": "passed",
+          "txid": "38798838f62f2b1c18f58922d1de6469567b04c8f7f66548c5ca4d7fc66752df",
+          "recipientFLUX": "1",
+          "senderFLUX": "0"
+        },
+        {
+          "name": "Activity moves from pending to confirmed after real block production resumes",
+          "status": "passed",
+          "txid": "52695337f837b22b57e0b3a2da7fb6a0f3971cfe2cacba88f86b89766ac46941",
+          "pendingObserved": true,
+          "confirmedObserved": true
+        },
+        {
+          "name": "A real price move cannot settle a swap below its approved minimum",
+          "status": "passed",
+          "nodeRejected": true,
+          "error": "RPC sendrawtransaction: ba-swap-price",
+          "noFundsMoved": true
+        }
+      ],
+      "checkedAt": "2026-10-27T11:07:16.562Z"
+    },
+    {
+      "file": "public-explorer-test.json",
+      "title": "Public Explorer",
+      "environment": "Live public API reads; invalid unsigned bytes safely refused",
+      "checks": [
+        {
+          "name": "Verify the live Explorer network and slot",
+          "status": "passed",
+          "network": "ecashbeta",
+          "slot": 99,
+          "height": 22264,
+          "headers": 22264,
+          "syncing": false,
+          "mainchain_height": 974021
+        },
+        {
+          "name": "Read and verify confirmed token outputs against parent transactions",
+          "status": "passed",
+          "address": "bflx1qzymftthcqlfrt9wywlfc7xz89vcqznyf5juv5a",
+          "outputs": 1,
+          "tokenUnits": "2238304577"
+        },
+        {
+          "name": "Read real transaction history",
+          "status": "passed",
+          "transactions": 1
+        },
+        {
+          "name": "Load real asset identity and a valid 256px token image",
+          "status": "passed",
+          "ticker": "FLUSH",
+          "decimals": 6,
+          "width": 256,
+          "height": 256
+        },
+        {
+          "name": "Obtain a live quote with integer amounts and an enforced minimum",
+          "status": "passed",
+          "inputECX": "0.001",
+          "quotedFLUSH": 44.721408,
+          "minFLUSH": 44.274193,
+          "pools": [
+            "6e1ead05c56c42bf7be20de55a3ab44e824c32d5e229960b5d700fcd99c728fa"
+          ]
+        },
+        {
+          "name": "ecash address lookup",
+          "status": "blocked",
+          "http": 405,
+          "error": "Address lookups cannot be used with bitcoind as backend.",
+          "url": "https://explorer.blockfab.org/betanet/api/address/bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu/utxo"
+        },
+        {
+          "name": "ecash broadcast endpoint safely refuses invalid transaction bytes",
+          "status": "passed",
+          "http": 400,
+          "response": "{\"error\":\"sendrawtransaction RPC error: {\\\"code\\\":-4}\"}",
+          "fundsMoved": false
+        },
+        {
+          "name": "flush address lookup",
+          "status": "passed",
+          "http": 200,
+          "url": "https://explorer.blockfab.org/betanet/flush/api/address/bflx1qzymftthcqlfrt9wywlfc7xz89vcqznyf5juv5a/utxo"
+        },
+        {
+          "name": "flush broadcast endpoint safely refuses invalid transaction bytes",
+          "status": "passed",
+          "http": 400,
+          "response": "{\"error\":\"sendrawtransaction RPC error: {\\\"code\\\":-4}\"}",
+          "fundsMoved": false
+        },
+        {
+          "name": "Funded default-Explorer purchase and transfer",
+          "status": "blocked",
+          "address": "bflx1qvwgqgsq8g8mxjjvqgm7f6spcm0vj2vaaj7ftxr",
+          "balanceSat": "0",
+          "reason": "Fresh public test wallet has no test ECX; no signed public transaction has been broadcast."
+        }
+      ],
+      "checkedAt": "2026-10-27T11:13:31.725Z"
+    }
+  ]
+}

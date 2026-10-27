@@ -9,6 +9,9 @@ export const PATH="m/84'/1'/0'/0/0";
 export const L1_NETWORK={messagePrefix:'\u0018Bitcoin Signed Message:\n',bech32:'bc',bip32:{public:0x0488b21e,private:0x0488ade4},pubKeyHash:0,scriptHash:5,wif:128};
 export const L1_PATH="m/84'/0'/0'/0/0";
 export function chainNetwork(chain='flush'){if(chain==='flush')return NETWORK;if(chain==='ecash')return L1_NETWORK;throw Error('Unknown chain');}
+// Flush credits deposits in its coinbase and permits them in the next block.
+// L1 eCash retains Bitcoin's 100-confirmation coinbase maturity.
+export function coinbaseMature(coin,chain='flush'){return !coin.coinbase||coin.confirmations>=(chain==='ecash'?100:1);}
 export const hex=b=>Array.from(b,v=>v.toString(16).padStart(2,'0')).join('');
 export const unhex=s=>{if(typeof s!=='string'||s.length%2||!/^[0-9a-f]*$/i.test(s))throw Error('Invalid hex');return Uint8Array.from(s.match(/../g)||[],v=>parseInt(v,16));};
 export const concat=(...b)=>Uint8Array.from(b.flatMap(v=>[...v]));
@@ -84,7 +87,7 @@ function fund({from,inputs=[],outputs,utxos,feeRate=2,summary,chain='flush'}){
  if(total<spend+fee)throw Error('Insufficient ECX for amount and network fee');
  const change=total-spend-fee;if(change>=294n)outputs.push({script:mine,value:change});else fee+=change;
  if(fee>100000n)throw Error('Network fee exceeds 0.001 ECX');
- for(const u of inputs){if(u.scriptPubKey!==hex(mine))throw Error('Server returned an input owned by another address');if(u.coinbase&&u.confirmations<100)throw Error('Immature coinbase');}
+ for(const u of inputs){if(u.scriptPubKey!==hex(mine))throw Error('Server returned an input owned by another address');if(!coinbaseMature(u,chain))throw Error('Immature coinbase');}
  const psbt=new Psbt({network});psbt.setVersion(2);
  if(chain==='ecash')psbt.setLocktime(499999999); // eCash betanet's replay-protection marker.
  for(const u of inputs)psbt.addInput({hash:u.txid,index:u.vout,sequence:0xfffffffd,witnessUtxo:{script:unhex(u.scriptPubKey),value:BigInt(u.value_sat)}});

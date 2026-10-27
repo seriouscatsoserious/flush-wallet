@@ -1,13 +1,34 @@
 import {createExplorerBackend} from './api.js';
 import {createRpcBackend,validateConnection,rpcOrigin} from './rpc.js';
 import {sealConnection,openConnection,redactConnection} from './connection.js';
-import {newMnemonic,encryptVault,decryptVault,publicAccounts,checkRecovery,depositAddress,paymentPlan,tradePlan,parseUri,decimal,hex} from './core.js';
+import {Transaction} from 'bitcoinjs-lib';
+import {newMnemonic,encryptVault,decryptVault,publicAccounts,checkRecovery,depositAddress,paymentPlan,tradePlan,parseUri,decimal,hex,coinbaseMature} from './core.js';
 let mnemonic=null,lockAt=0,plan=null,pendingReply=null,pendingWindow=null;
 let rpcBackend=null,rpcConfig=null,connectionGeneration=0,lockTimer=null;
 const store=chrome.storage.local;
 async function protectStorage(){await store.setAccessLevel({accessLevel:'TRUSTED_CONTEXTS'});await chrome.storage.session.setAccessLevel({accessLevel:'TRUSTED_CONTEXTS'});}
-protectStorage();chrome.runtime.onInstalled.addListener(protectStorage);
+// Request callbacks live only in this worker. A request left by a terminated worker
+// must not remain approvable or block a fresh request after its response port closes.
+const ready=protectStorage().then(async()=>{
+ const [saved,previous]=await Promise.all([store.get('usedUris'),chrome.storage.session.get('usedUris')]);
+ const used=Object.fromEntries(Object.entries({...previous.usedUris,...saved.usedUris}).filter(([,expiry])=>expiry>=Math.floor(Date.now()/1000)));
+ if(Object.keys(used).length||previous.usedUris)await store.set({usedUris:used});
+ await chrome.storage.session.remove(['pending','usedUris']);
+});
+chrome.runtime.onInstalled.addListener(protectStorage);
 const vault=async()=>(await store.get('vault')).vault;
+let historyWrites=Promise.resolve();
+function changeHistory(change){const job=historyWrites.then(async()=>{const current=(await store.get('history')).history||[],next=change(current);await store.set({history:next});return next;});historyWrites=job.catch(()=>{});return job;}
+async function rememberTransaction(entry){return changeHistory(current=>[entry,...current.filter(tx=>tx.txid!==entry.txid||(tx.chain||'flush')!==entry.chain)].slice(0,100));}
+async function localHistory(b){
+ const history=(await store.get('history')).history||[];let updated=false;
+ for(const tx of history){if(tx.status==='failed'||tx.status==='confirmed'&&Date.now()-(tx.checkedAt||0)<15000)continue;const result=await b.transactionStatus(tx.chain||'flush',tx.txid,tx.outputs);Object.assign(tx,result,{checkedAt:Date.now()});updated=true;if(result.unavailable)break;}
+ if(!updated)return history;
+ const changes=new Map(history.map(tx=>[(tx.chain||'flush')+tx.txid,tx]));
+ // A second popup may approve a new transaction while these network reads run.
+ // Merge status fields into the current list instead of overwriting new entries.
+ return changeHistory(current=>current.map(tx=>{const next=changes.get((tx.chain||'flush')+tx.txid);return next&&next.time===tx.time&&(next.checkedAt||0)>=(tx.checkedAt||0)?{...tx,status:next.status,confirmations:next.confirmations,checkedAt:next.checkedAt}:tx;}));
+}
 const uriKey=async s=>hex(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s))));
 function lock(){mnemonic=null;rpcBackend=null;rpcConfig=null;plan=null;clearTimeout(lockTimer);}
 function setUnlocked(phrase){mnemonic=phrase;lockAt=Date.now()+120000;clearTimeout(lockTimer);lockTimer=setTimeout(lock,120000);}
@@ -54,7 +75,7 @@ async function prepareTrade(args,b){
  for(const id of pools){const p=await b.api('/api/v1/pools/'+id);const a=p.asset_a_id||'',other=p.asset_b_id||'';if(side!==a&&side!==other)throw Error('Pool does not match input asset');side=side===a?other:a;}
  if(side!==(outAsset.id==='ECX'?'':outAsset.id))throw Error('Pool does not match output asset');
  if(generation!==connectionGeneration)throw Error('Connection changed; review this transaction again');
- plan=tradePlan({from:v.address,assetIn:inAsset.id,assetOut:outAsset.id,amount:args.amount,decimalsIn:inAsset.decimals,decimalsOut:outAsset.decimals,minOut,pools,utxos:coins.utxos.filter(u=>!u.coinbase||u.confirmations>=100)});plan.connectionGeneration=generation;
+ plan=tradePlan({from:v.address,assetIn:inAsset.id,assetOut:outAsset.id,amount:args.amount,decimalsIn:inAsset.decimals,decimalsOut:outAsset.decimals,minOut,pools,utxos:coins.utxos.filter(u=>coinbaseMature(u,'flush'))});plan.connectionGeneration=generation;
  plan.summary.tickerIn=inAsset.ticker;plan.summary.tickerOut=outAsset.ticker;plan.summary.quote=quote.amount_out;return plan;
 }
 async function requestPlan(request){
@@ -88,19 +109,23 @@ async function internal(m){
   const held=holdings.items.filter(h=>h.kind==='asset');const known=new Set(assets.items.map(a=>a.id));
   for(const h of held){if(!known.has(h.asset_id)){assets.items.push(await resolveAsset(h.asset_id,b));known.add(h.asset_id);}}
   const logos=Object.fromEntries(await Promise.all(held.map(async h=>[h.asset_id,await b.logo(h.asset_id)])));
-  const balance=coins?coins.utxos.filter(u=>!u.token&&(!u.coinbase||u.confirmations>=100)).reduce((s,u)=>s+BigInt(u.value_sat),0n).toString():null;
-  const l1balance=l1coins?l1coins.utxos.filter(u=>!u.coinbase||u.confirmations>=100).reduce((s,u)=>s+BigInt(u.value_sat),0n).toString():null;
+  const balance=coins?coins.utxos.filter(u=>!u.token&&coinbaseMature(u,'flush')).reduce((s,u)=>s+BigInt(u.value_sat),0n).toString():null;
+  const l1balance=l1coins?l1coins.utxos.filter(u=>coinbaseMature(u,'ecash')).reduce((s,u)=>s+BigInt(u.value_sat),0n).toString():null;
   return {coins,l1coins,network,assets:assets.items,holdings:held,logos,connectionMode:b.mode,tokenMetadataAvailable:!holdings.unavailable,balance_sat:balance,l1_balance_sat:l1balance,deposit:depositAddress(v.address),history:(await store.get('history')).history||[]};
  }
- case 'HISTORY':{const v=await vault();if(!v)throw Error('No wallet');const b=await backend(),results=await Promise.allSettled([b.history('ecash',v.accounts.ecash.address),b.history('flush',v.address)]);const entries=results.flatMap(r=>r.status==='fulfilled'?r.value:[]),merged=new Map(entries.map(t=>[t.chain+t.txid,t]));for(const t of (await store.get('history')).history||[]){const chain=t.chain||'flush',old=merged.get(chain+t.txid);merged.set(chain+t.txid,{...old,...t,chain});}return {items:[...merged.values()].sort((a,b)=>b.time-a.time),unavailableChains:results.flatMap((r,i)=>r.status==='rejected'?[i===0?'eCash':'Flush']:[]),localOnly:b.mode==='rpc'};}
- case 'PREPARE_SEND':{const generation=connectionGeneration,b=await backend(),chain=m.chain||'flush',v=await vault(),coins=await myCoins(chain,b),a=await resolveAsset(m.asset||'ECX',b);if(chain==='ecash'&&a.id!=='ECX')throw Error('Tokens are sent on Flush');if(chain==='flush'&&a.id!=='ECX'&&!coins.token_metadata_available)throw Error('Token signing metadata is temporarily unavailable; try again shortly');if(generation!==connectionGeneration)throw Error('Connection changed; review this transaction again');plan=paymentPlan({from:chain==='ecash'?v.accounts.ecash.address:v.address,to:m.to,amount:m.amount,asset:a.id,decimals:a.decimals,utxos:coins.utxos.filter(u=>!u.coinbase||u.confirmations>=100),chain});plan.connectionGeneration=generation;plan.summary.ticker=a.ticker;return plan;}
+ case 'HISTORY':{const v=await vault();if(!v)throw Error('No wallet');const b=await backend(),results=await Promise.allSettled([b.history('ecash',v.accounts.ecash.address),b.history('flush',v.address)]);const entries=results.flatMap(r=>r.status==='fulfilled'?r.value:[]),merged=new Map(entries.map(t=>[t.chain+t.txid,t]));for(const t of await localHistory(b)){const chain=t.chain||'flush',old=merged.get(chain+t.txid);merged.set(chain+t.txid,{...old,...t,chain});}return {items:[...merged.values()].sort((a,b)=>b.time-a.time),unavailableChains:results.flatMap((r,i)=>r.status==='rejected'?[i===0?'eCash':'Flush']:[]),localOnly:b.mode==='rpc'};}
+ case 'PREPARE_SEND':{const generation=connectionGeneration,b=await backend(),chain=m.chain||'flush',v=await vault(),coins=await myCoins(chain,b),a=await resolveAsset(m.asset||'ECX',b);if(chain==='ecash'&&a.id!=='ECX')throw Error('Tokens are sent on Flush');if(chain==='flush'&&a.id!=='ECX'&&!coins.token_metadata_available)throw Error('Token signing metadata is temporarily unavailable; try again shortly');if(generation!==connectionGeneration)throw Error('Connection changed; review this transaction again');plan=paymentPlan({from:chain==='ecash'?v.accounts.ecash.address:v.address,to:m.to,amount:m.amount,asset:a.id,decimals:a.decimals,utxos:coins.utxos.filter(u=>coinbaseMature(u,chain)),chain});plan.connectionGeneration=generation;plan.summary.ticker=a.ticker;return plan;}
  case 'PREPARE_SWAP':return prepareTrade(m);
  case 'APPROVE':{
   if(!unlocked())throw Error('Unlock your wallet first');if(!plan||m.planId!==plan.id||plan.connectionGeneration!==connectionGeneration||Date.now()-plan.created>120000)throw Error('Quote expired or connection changed; review again');
   const approved=plan;plan=null;
-  const b=await backend(),{signPlan}=await import('./core.js');if(!unlocked())throw Error('Unlock your wallet first');const signed=signPlan(approved,mnemonic),result=await b.broadcast(approved.chain||'flush',signed.hex);
-  if(result.txid!==signed.txid)throw Error('Broadcast returned an unexpected transaction ID');
-  const old=(await store.get('history')).history||[];await store.set({history:[{...approved.summary,chain:approved.chain||'flush',txid:result.txid,time:Date.now()},...old].slice(0,100)});return result;
+  const b=await backend(),{signPlan}=await import('./core.js');if(!unlocked())throw Error('Unlock your wallet first');const signed=signPlan(approved,mnemonic);
+  const entry={...approved.summary,chain:approved.chain||'flush',txid:signed.txid,time:Date.now(),status:'unknown',confirmations:0,outputs:Transaction.fromHex(signed.hex).outs.flatMap((out,index)=>out.script[0]===106?[]:[index])};
+  // Persist the approved transaction before the network call: a worker shutdown or lost
+  // response must never erase a send that may already have reached the node.
+  await rememberTransaction(entry);
+  try{const result=await b.broadcast(entry.chain,signed.hex);if(result.txid!==signed.txid)throw Error('Broadcast returned an unexpected transaction ID');await rememberTransaction({...entry,status:'pending'});return {...result,status:'pending'};}
+  catch(error){const observed=error.rejected?{status:'failed',confirmations:0}:await b.transactionStatus(entry.chain,signed.txid,entry.outputs);await rememberTransaction({...entry,...observed,checkedAt:Date.now()});if(['pending','confirmed'].includes(observed.status))return {txid:signed.txid,...observed};if(error.rejected)throw error;throw Error('Submission status is unknown. Check Activity before trying again. Transaction '+signed.txid);}
  }
  case 'BACKUP':return {vault:await vault()};
  case 'RECOVERY':return {mnemonic:await decryptVault(await vault(),m.password)};
@@ -108,24 +133,27 @@ async function internal(m){
  case 'PENDING':return (await chrome.storage.session.get('pending')).pending||null;
  case 'PREPARE_PENDING':{const p=(await chrome.storage.session.get('pending')).pending;if(!p||Date.now()>p.expires)throw Error('Request expired');const r=parseUri(p.uri);if(r.verb==='connect'){const v=await vault();if(!v)throw Error('Create a wallet first');return {summary:{type:'connect',origin:p.origin,address:v.address},request:r};}return requestPlan(r);}
  case 'RESOLVE_PENDING':{
-  const p=(await chrome.storage.session.get('pending')).pending;if(!p)throw Error('Request expired');let result;
+  const p=(await chrome.storage.session.get('pending')).pending;if(!p||Date.now()>p.expires){pendingReply?.({ok:false,error:'Request expired'});pendingReply=null;await chrome.storage.session.remove('pending');throw Error('Request expired');}if(m.approved&&!unlocked())throw Error('Unlock the wallet before approving this request');let result;
   if(m.approved){const r=parseUri(p.uri);if(r.verb==='connect'){const v=await vault();if(!v)throw Error('No wallet');result={address:v.address,publicKey:v.publicKey,network:'ecashbeta'};if(!p.direct)await chrome.tabs.create({url:'https://flush.markets/connect#'+new URLSearchParams({address:v.address,nonce:r.nonce,network:'ecashbeta'})});}else result=await internal({type:'APPROVE',planId:m.planId});}
-  if(m.approved){const used=(await chrome.storage.session.get('usedUris')).usedUris||{};used[await uriKey(p.uri)]=Number(parseUri(p.uri).exp);for(const [k,v] of Object.entries(used))if(v<Math.floor(Date.now()/1000))delete used[k];await chrome.storage.session.set({usedUris:used});}
+  if(m.approved){const used=(await store.get('usedUris')).usedUris||{};used[await uriKey(p.uri)]=Number(parseUri(p.uri).exp);for(const [k,v] of Object.entries(used))if(v<Math.floor(Date.now()/1000))delete used[k];await store.set({usedUris:used});}
   pendingReply?.(m.approved?{ok:true,result}:{ok:false,error:'User rejected'});pendingReply=null;await chrome.storage.session.remove('pending');return result||{rejected:true};
  }
  default:throw Error('Unknown wallet command');
  }
 }
+let openingRequest=false;
 chrome.runtime.onMessage.addListener((m,sender,reply)=>{
  const trusted=sender.id===chrome.runtime.id&&sender.url?.startsWith(chrome.runtime.getURL(''));
- if(trusted){internal(m).then(result=>reply({ok:true,result})).catch(e=>reply({ok:false,error:e.message}));return true;}
+ if(trusted){ready.then(()=>internal(m)).then(result=>reply({ok:true,result})).catch(e=>reply({ok:false,error:e.message}));return true;}
  if(m.type!=='DAPP'||sender.frameId!==0||sender.origin!=='https://flush.markets'){reply({ok:false,error:'Origin not allowed'});return false;}
+ if(openingRequest){reply({ok:false,error:'Another wallet request is pending'});return false;}openingRequest=true;
  (async()=>{
+  await ready;
   if(m.method==='flush_requestAddress')m.uri='flush:connect?'+new URLSearchParams({v:'1',network:'ecashbeta',exp:String(Math.floor(Date.now()/1000)+600),origin:'https://flush.markets',callback:'https://flush.markets/connect',nonce:crypto.randomUUID().replaceAll('-','')});
-  parseUri(m.uri);const used=(await chrome.storage.session.get('usedUris')).usedUris||{};if(used[await uriKey(m.uri)])throw Error('This request was already completed');
+  parseUri(m.uri);const used=(await store.get('usedUris')).usedUris||{};if(used[await uriKey(m.uri)])throw Error('This request was already completed');
   const old=(await chrome.storage.session.get('pending')).pending;if(old&&old.expires>Date.now())throw Error('Another wallet request is pending');
   await chrome.storage.session.set({pending:{uri:m.uri,direct:m.method==='flush_requestAddress',origin:sender.origin,tabId:sender.tab.id,expires:Date.now()+120000}});pendingReply=reply;
   const w=await chrome.windows.create({url:chrome.runtime.getURL('popup.html')+'?approval=1',type:'popup',width:420,height:730});pendingWindow=w.id;
- })().catch(e=>reply({ok:false,error:e.message}));return true;
+ })().catch(e=>reply({ok:false,error:e.message})).finally(()=>{openingRequest=false;});return true;
 });
 chrome.windows.onRemoved.addListener(id=>{if(id===pendingWindow){pendingReply?.({ok:false,error:'Wallet window closed'});pendingReply=null;pendingWindow=null;chrome.storage.session.remove('pending');}});

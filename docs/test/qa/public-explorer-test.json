@@ -1,0 +1,82 @@
+{
+  "checkedAt": "2026-10-27T11:13:31.725Z",
+  "network": "public betanet",
+  "checks": [
+    {
+      "name": "Verify the live Explorer network and slot",
+      "status": "passed",
+      "network": "ecashbeta",
+      "slot": 99,
+      "height": 22264,
+      "headers": 22264,
+      "syncing": false,
+      "mainchain_height": 974021
+    },
+    {
+      "name": "Read and verify confirmed token outputs against parent transactions",
+      "status": "passed",
+      "address": "bflx1qzymftthcqlfrt9wywlfc7xz89vcqznyf5juv5a",
+      "outputs": 1,
+      "tokenUnits": "2238304577"
+    },
+    {
+      "name": "Read real transaction history",
+      "status": "passed",
+      "transactions": 1
+    },
+    {
+      "name": "Load real asset identity and a valid 256px token image",
+      "status": "passed",
+      "ticker": "FLUSH",
+      "decimals": 6,
+      "width": 256,
+      "height": 256
+    },
+    {
+      "name": "Obtain a live quote with integer amounts and an enforced minimum",
+      "status": "passed",
+      "inputECX": "0.001",
+      "quotedFLUSH": 44.721408,
+      "minFLUSH": 44.274193,
+      "pools": [
+        "6e1ead05c56c42bf7be20de55a3ab44e824c32d5e229960b5d700fcd99c728fa"
+      ]
+    },
+    {
+      "name": "ecash address lookup",
+      "status": "blocked",
+      "http": 405,
+      "error": "Address lookups cannot be used with bitcoind as backend.",
+      "url": "https://explorer.blockfab.org/betanet/api/address/bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu/utxo"
+    },
+    {
+      "name": "ecash broadcast endpoint safely refuses invalid transaction bytes",
+      "status": "passed",
+      "http": 400,
+      "response": "{\"error\":\"sendrawtransaction RPC error: {\\\"code\\\":-4}\"}",
+      "fundsMoved": false
+    },
+    {
+      "name": "flush address lookup",
+      "status": "passed",
+      "http": 200,
+      "url": "https://explorer.blockfab.org/betanet/flush/api/address/bflx1qzymftthcqlfrt9wywlfc7xz89vcqznyf5juv5a/utxo"
+    },
+    {
+      "name": "flush broadcast endpoint safely refuses invalid transaction bytes",
+      "status": "passed",
+      "http": 400,
+      "response": "{\"error\":\"sendrawtransaction RPC error: {\\\"code\\\":-4}\"}",
+      "fundsMoved": false
+    },
+    {
+      "name": "Funded default-Explorer purchase and transfer",
+      "status": "blocked",
+      "address": "bflx1qvwgqgsq8g8mxjjvqgm7f6spcm0vj2vaaj7ftxr",
+      "balanceSat": "0",
+      "reason": "Fresh public test wallet has no test ECX; no signed public transaction has been broadcast."
+    }
+  ],
+  "fundedBroadcastTested": false,
+  "failed": 0
+}

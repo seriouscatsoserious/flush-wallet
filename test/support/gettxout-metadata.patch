@@ -1,0 +1,27 @@
+diff --git a/src/rpc/blockchain.cpp b/src/rpc/blockchain.cpp
+index 6a13f9b..6ff6df8 100644
+--- a/src/rpc/blockchain.cpp
++++ b/src/rpc/blockchain.cpp
+@@ -9,5 +9,7 @@
+ #include <arith_uint256.h>
+ #include <blockfilter.h>
++#include <sidechain/state.h>
++#include <bitassets/state.h>
+ #include <chain.h>
+ #include <chainparams.h>
+ #include <chainparamsbase.h>
+@@ -1306,3 +1308,14 @@ static RPCMethod gettxout()
+     ScriptToUniv(coin->out.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
+     ret.pushKV("scriptPubKey", std::move(o));
+     ret.pushKV("coinbase", coin->IsCoinBase());
++    // Browser wallets need the actual token state, including dynamically cleared results.
++    // This is read-only metadata; it does not change transaction or consensus rules.
++    if (const auto token{active_chainstate.SideState().BitAssets().GetToken(out)}) {
++        UniValue t(UniValue::VOBJ);
++        t.pushKV("kind", static_cast<int>(token->kind));
++        t.pushKV("id", token->id.GetHex());
++        t.pushKV("amount_units", util::ToString(token->amount));
++        ret.pushKV("token", std::move(t));
++    } else {
++        ret.pushKV("token", UniValue{UniValue::VNULL});
++    }
