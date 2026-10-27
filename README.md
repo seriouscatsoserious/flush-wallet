@@ -1,36 +1,38 @@
 # Flush Wallet
 
-A Chrome extension for L1 ECX, ECX on Flush, and Flush assets. Keys and transaction signing stay in the browser. The public Explorer is the default connection; using your own eCash and Flush RPC nodes is an optional setting under **Settings → Advanced → Connection**.
+Chrome wallet for L1 ECX, ECX on Flush, and Flush assets. Recovery words, keys and transaction signing stay in the browser. Explorer is the default connection; no node download or local server is required.
 
-In Explorer mode, swap quotes come from the public Flush API at `flush.markets`; the Explorer's market proxy excludes quote routes. Address reads and transaction broadcasting use the Explorer. Own-node mode gets all of its data and quotes directly from the paired RPC nodes.
+[Download the Chrome extension](https://github.com/seriouscatsoserious/flush-wallet/releases/tag/v0.3.2) · [Installation](https://seriouscatsoserious.github.io/flush-wallet/) · [Remaining work](https://github.com/seriouscatsoserious/flush-wallet/issues)
 
-The interface follows the Flush site's colours, official mark, Barlow typography, JetBrains Mono readouts, and hairline layout.
+## Install
 
-![All 24 wallet screens](docs/demo/flush-wallet-collage.png)
+1. Download and extract `flush-wallet-0.3.2.zip` from the release.
+2. Open `chrome://extensions` in desktop Chrome and enable **Developer mode**.
+3. Choose **Load unpacked**, select the extracted `flush-wallet` folder, and pin the extension.
+4. Create a wallet or import your recovery words.
 
-## Demo
+You can also load the repository's built `extension/` folder. See [INSTALL.txt](INSTALL.txt) for recovery and connection details.
 
-- [Online screen viewer](https://seriouscatsoserious.github.io/flush-wallet/) — browse all 24 screens on mobile or desktop, filter by flow, and open each capture at full resolution.
-- [Browser and real-node QA results](https://seriouscatsoserious.github.io/flush-wallet/test/qa/) — passed checks, public-network blockers, transaction evidence, and full-resolution browser captures.
-- [Full-resolution collage](docs/demo/flush-wallet-collage.png)
-- [PDF collage](docs/demo/flush-wallet-collage.pdf)
-- [Interactive gallery](docs/demo/gallery.html) — download and open locally; fonts and images are embedded. Filter by flow or click a screen to see it at full size.
-- [Individual screenshots](docs/demo/screens) and [screen index](docs/demo/screens.json)
+## Features
 
-These are captures of the real extension UI using offline fixtures. Balances, quotes, history, and the broadcast response are simulated. The recovery phrase is a **public test vector**. Never send funds to any address in the demo. Running the demo starts no node or API service and broadcasts nothing to a live chain.
+- Local 12-word wallet creation, recovery-word confirmation, seed import, encrypted storage and auto-lock.
+- Separate L1 and Flush accounts, receive QR codes and a Flush deposit address.
+- Native ECX and token transfers, swaps, launch buy/sell approvals and Activity.
+- Token names and logos from Explorer metadata.
+- `flush.markets` connection and transaction approvals, with explicit review before signing.
+- Optional own-node RPC under **Settings → Advanced → Connection**, with encrypted credentials and host permissions requested when pairing.
 
-## Install in Chrome
+The interface uses the Flush site's official mark, colours, Barlow typography and JetBrains Mono readouts.
 
-1. Clone or download this repository.
-2. Open `chrome://extensions` and enable **Developer mode**.
-3. Choose **Load unpacked** and select the repository's `extension` folder.
-4. Pin Flush Wallet, then create or import a recovery phrase.
+## Network and current limits
 
-The built extension is included. No node download or server is required for Explorer mode. See [INSTALL.txt](INSTALL.txt) for connection and recovery details.
+This release uses **temporary betanet, Flush slot 99**. L1 Explorer address lookups currently return HTTP 405; L1 balances and history can be unavailable until that external service is fixed. A funded public Explorer purchase/transfer is still outstanding. The site's connection-cancellation fix is in [draft PR #1](https://github.com/block-fabric/flush-markets/pull/1).
 
-## Develop
+Token spending requires resolved per-output metadata; missing metadata blocks token signing. Own-node Activity includes transactions sent from this browser. Mainnet, asset creation, liquidity management, auctions, staking and peg-outs are not enabled. The [issues](https://github.com/seriouscatsoserious/flush-wallet/issues) track release blockers and follow-up work.
 
-Use Node.js 22 or newer.
+## Development
+
+Requires Node.js 22 or newer.
 
 ```sh
 npm ci
@@ -38,113 +40,24 @@ npm run build
 npm test
 ```
 
-The build is self-contained: site design tokens, fonts, icons, and licences are included. It does not need a checkout of the site or node software.
+`npm run build` recreates `extension/` from application source and a fixed asset list. The pinned manifest public key preserves the extension ID. No test harnesses, fixtures, screenshots, reports, browser profiles or node software are copied into the extension.
 
-For browser checks and demo captures, first install Chromium:
+`npm run package` builds and creates an allowlisted ZIP in ignored `output/` (Python 3 is needed for ZIP creation). The ZIP contains only the installable wallet and its licences.
 
-```sh
-npx playwright install chromium
-npm run demo
-npm run test:browser
-npm run test:advanced
-```
-
-`npm run demo` regenerates all 24 screenshots at 2× resolution, the collage PNG/PDF, and the standalone gallery in `docs/demo`. It also copies the fonts used by the hosted viewer. GitHub Pages serves `docs/` from `main`; the viewer is static and needs no wallet connection or server on your machine. Captures use intercepted fixture responses. The two browser tests also exercise the live Explorer; the advanced test intercepts its node RPC calls and broadcasts only to a fixture. On Linux, Playwright may need browser system libraries (`npx playwright install --with-deps chromium`).
-
-## Confirmed swap on real local nodes
-
-On October 27, 2026, the browser wallet received **816.82 FLUX for 0.1 generated test ECX**, confirmed in a real Flush regtest block. The network fee was **0.00002018 ECX**. After funding the browser with 1 ECX, its remaining native balance was **0.89997982 ECX**. The reviewed minimum was **808.65 FLUX**, and the received amount exceeded it.
-
-The test used the official Flush playground: a Backbone mainchain, three Flush validators, generated coins, and a real FLUX/ECX pool. The browser constructed, signed and broadcast the swap; resolved token state from the node and the actual wallet screen both showed the receipt. No RPC responses were mocked and no public network was contacted by the test wallet. All five temporary processes were stopped afterward.
-
-- [Machine-readable test result](docs/test/regtest-swap.json)
-- [Wallet after the confirmed purchase](https://seriouscatsoserious.github.io/flush-wallet/test/wallet-after.png)
-- [Transaction review](https://seriouscatsoserious.github.io/flush-wallet/test/swap-review.png)
-
-A follow-up test sent **100 FLUX** from that same browser wallet to a fresh address in the original playground funding wallet. It confirmed with **100 FLUX received**, **716.82 FLUX left in the browser**, and a **0.0000067 ECX** fee. The original swap output was spent, the token change was correct, and the combined token amount was unchanged. This transfer also used real nodes and browser signing, with no mocked responses.
-
-- [Token transfer result](docs/test/regtest-send.json)
-- [Wallet after sending](https://seriouscatsoserious.github.io/flush-wallet/test/wallet-after-send.png)
-- [Token transfer review](https://seriouscatsoserious.github.io/flush-wallet/test/send-review.png)
-
-The test compiles a separate extension under ignored `runtime/`, changing network/address constants and network labels for regtest. Production network checks stay pinned to betanet. This verifies the wallet's real signing, broadcast and token-receipt flow on local nodes; the public Explorer-funded flow is still unverified.
-
-To repeat it, obtain the official [Flush playground](https://github.com/block-fabric/backbone-flush/tree/44ee8f2cfcae3d0d91afba7a617b7c02929fc0de/contrib/playground), its Flush binaries, and Backbone binaries supporting `-testecash`. The Flush node must expose resolved `token` metadata from `gettxout` (as in Flush 7.0.1 or the browser-wallet RPC patch).
-
-```sh
-FLUSH_PLAYGROUND_ARGS='-bind=127.0.0.1 -rpcbind=127.0.0.1 -rpcallowip=127.0.0.1' \
-  /path/to/backbone-flush/contrib/playground/flush-playground.sh \
-  --dir "$PWD/runtime/regtest-playground" start --no-app \
-  --flush-bin /path/to/flush/bin --backbone-bin /path/to/backbone/bin \
-  --base-port 49800 --block-seconds 1
-npm run test:regtest
-npm run test:regtest:send  # follow-up: send 100 of the purchased FLUX back to the funding wallet
-/path/to/backbone-flush/contrib/playground/flush-playground.sh \
-  --dir "$PWD/runtime/regtest-playground" stop
-```
-
-Stop the playground even if a test fails. Use `FLUSH_PLAYGROUND_DIR` when the playground data is elsewhere. The test refuses any mainchain or sidechain that is not regtest with the expected genesis and slot 46. Screenshots and the JSON result are regenerated under `output/`.
-
-The send test reopens the previous browser profile and checks that it still holds the original swap balance before sending. Run it while that same playground is running; do not reset the data between the swap and transfer. It refuses an accidental repeat after the token balance changes.
-
-## Browser and node QA (0.3.1)
-
-[The published QA report](https://seriouscatsoserious.github.io/flush-wallet/test/qa/) contains **57 passed checks, zero failed checks, and two blocked public-network checks**, plus **24 passing unit tests**. It records actual local-chain broadcasts separately from injected connection failures and live public API reads.
-
-Coverage includes funded seed recovery in a fresh profile, L1 and Flush ECX sends, an actual L1 deposit, selling tokens, a two-pool token trade, six-decimal transfers, full token-balance sends, missing fee coins, pending/confirmed status, price movement past the approved minimum, website approvals/cancellation/replay, real Chrome permission denial/grant/revocation, extension update across restart, real auto-lock timing, and interrupted/concurrent sends.
-
-Testing fixed Flush deposit maturity handling, durable outgoing-transaction history and concurrent refreshes, stale/expired approvals, and persistent replay protection. The production wallet still refuses the local regtest nodes. [The site's cancellation fix](https://github.com/block-fabric/flush-markets/pull/1) is a draft upstream PR; website integration tests used the proposed fix, not the unmodified production site.
-
-Two public-network checks remain blocked: the L1 Explorer address endpoints return HTTP 405, and the fresh public betanet wallet has no test ECX for a funded Explorer-backed purchase/transfer. Public Flush balances, token metadata, images, history, quotes, and rejection of invalid broadcast bytes were checked live. No funded public-chain transaction is claimed.
-
-To reproduce the additional local checks, keep the playground running after the initial swap/send tests. Start validator 0 with `FLUSH_PLAYGROUND_ARGS0='-publicapi=49830 -publicapiorigin=https://flush.markets'` so the site test can use its real read-only API. Older Flush builds need the [read-only gettxout metadata patch](test/support/gettxout-metadata.patch), including explicit `token: null` on ordinary outputs; current nodes exposing that contract do not need the patch.
-
-Run these sequentially (they reuse the funded browser profile):
-
-```sh
-node test/support/prepare-qa.mjs
-npm run test:qa:core
-npm run test:qa:assets
-npm run test:qa:security
-npm run test:qa:lifecycle
-npm run test:qa:balances
-npm run test:qa:permissions
-npm run test:qa:site
-npm run test:explorer
-```
-
-The permission test requires Linux `Xvfb` and `xdotool`. It uses actual Chrome dialogs on display `:101`; it does not mock Chrome's permission API. The website test requires a checkout of the site built with `PUBLIC_API_BASE=/api/v1 PUBLIC_NETWORK=regtest PUBLIC_SLOT=46 npm run build`; set `FLUSH_SITE_BUILD` if its output is elsewhere. Requests to the website's origin are served from that build and its local node API, without starting another web server. Apply the draft cancellation fix before expecting the site test to pass.
-
-The test copy uses regtest addresses, genesis/slot checks, and Backbone regtest's replay marker; production network parameters are unchanged. Stop the playground even after a failed test. Then generate the publication files:
-
-```sh
-node --test --test-reporter=tap test/*.test.mjs > output/unit-tests.tap
-npm run report:qa
-```
-
-The report generator refuses to publish while the playground PID file remains. No browser profiles, recovery words, vaults, passwords, or node credentials are included in the published evidence.
-
-## What works in this preview
-
-- Local 12-word seed creation, three-word backup check, seed import, password-encrypted storage, recovery display, and auto-lock.
-- Separate eCash and Flush addresses from one seed, receive QR codes, and a Flush deposit address.
-- Native and token sends, swap review, site connection/transaction approvals, and activity.
-- Explorer data and broadcasting, plus opt-in own-node RPC with encrypted credentials and per-host Chrome permissions requested when pairing.
-
-This is the temporary betanet on Flush slot 99. The live Explorer currently rejects L1 address lookups with its `bitcoind` backend; those balances appear as unavailable. Token spending requires resolved per-output token metadata from the Explorer or RPC node. RPC activity includes transactions sent by this browser. Funded live-chain transfers have not been validated. Mainnet, asset creation, liquidity management, auctions, staking, and peg-outs are not enabled.
+Automated checks remain development tools under `test/`. Browser checks require Playwright Chromium (`npx playwright install chromium`). Demo captures and QA reports are written only to ignored `output/`; GitHub Pages serves the installation page from `docs/`.
 
 ## Source layout
 
 | Path | Purpose |
 | --- | --- |
 | `src/core.js` | Key derivation, vault encryption, transaction construction and signing |
-| `src/background.js` | Wallet state, approvals, connection selection |
+| `src/background.js` | Wallet state, approvals and connections |
 | `src/api.js` | Explorer reads, metadata, history and broadcasting |
 | `src/rpc.js`, `src/connection.js` | Own-node transport and encrypted connection storage |
-| `src/popup.*` | Extension screens |
-| `src/provider.js`, `src/content.js` | `flush.markets` wallet interface |
-| `assets/` | Bundled fonts and third-party licence notices |
-| `scripts/demo.mjs` | Actual-UI demo capture and collage renderer |
-| `test/` | Unit tests and browser checks |
+| `src/popup.*` | Wallet screens |
+| `src/manifest.json` | Chrome manifest and pinned extension public key |
+| `assets/` | Icons, fonts and licence notices |
+| `scripts/build.mjs`, `scripts/package.mjs` | Production build and packaging |
+| `test/` | Development checks; excluded from the extension |
 
 Brand reference: [Flush site design rules](https://github.com/block-fabric/flush-markets/blob/main/docs/design.md). Font and dependency licences are in [assets/licenses](assets/licenses).

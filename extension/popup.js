@@ -7633,7 +7633,7 @@
       return;
     }
     if (view === "settings") {
-      base2(`<h1>Settings</h1><div class="card"><div class="split"><span>Network</span><strong>eCash + Flush \xB7 Betanet</strong></div><div class="split"><span>Signing</span><strong>On this device</strong></div><div class="split"><span>Auto-lock</span><strong>2 minutes</strong></div></div><button class="secondary" id="recovery">Show recovery phrase</button><details class="advanced" id="advanced"><summary>Advanced</summary><button class="secondary" id="connection">Connection</button></details><div class="divider"></div><p class="fine">Temporary betanet. This chain will be replaced when Flush moves to slot 46.</p><p class="fine">Wallet 0.3.1 \xB7 Browser signing<br></p>`);
+      base2(`<h1>Settings</h1><div class="card"><div class="split"><span>Network</span><strong>eCash + Flush \xB7 Betanet</strong></div><div class="split"><span>Signing</span><strong>On this device</strong></div><div class="split"><span>Auto-lock</span><strong>2 minutes</strong></div></div><button class="secondary" id="recovery">Show recovery phrase</button><details class="advanced" id="advanced"><summary>Advanced</summary><button class="secondary" id="connection">Connection</button></details><div class="divider"></div><p class="fine">Temporary betanet. This chain will be replaced when Flush moves to slot 46.</p><p class="fine">Wallet 0.3.2 \xB7 Browser signing<br></p>`);
       bind("recovery", recovery);
       bind("connection", () => go("connection"));
       return;

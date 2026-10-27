@@ -1,6 +1,6 @@
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
-import {mkdtemp,mkdir,readFile,writeFile,copyFile,rm} from 'node:fs/promises';
+import {mkdtemp,mkdir,readFile,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {resolve} from 'node:path';
 import {account,hex,signPlan} from '../src/core.js';
@@ -11,10 +11,8 @@ const password='public demo password 123';
 const accounts={ecash:account(phrase,'ecash'),flush:account(phrase)};
 const recipient=account('legal winner thank year wave sausage worth useful legal winner thank yellow');
 const asset='44'.repeat(32),pool='55'.repeat(32);
-const output=resolve('docs/demo'),screens=output+'/screens';
+const output=resolve('output/demo'),screens=output+'/screens';
 await mkdir(screens,{recursive:true});
-await mkdir('docs/assets/fonts',{recursive:true});
-for(const file of ['barlow-300.woff2','barlow-400.woff2','barlow-500.woff2','jetbrains-mono.woff2'])await copyFile('assets/fonts/'+file,'docs/assets/fonts/'+file);
 const version=JSON.parse(await readFile('package.json','utf8')).version;
 const profile=await mkdtemp(tmpdir()+'/flush-demo-');
 const browser=await chromium.launchPersistentContext(profile,{
@@ -156,5 +154,5 @@ try{
  await sheet.screenshot({path:output+'/flush-wallet-collage.png',fullPage:true,scale:'css'});
  await sheet.pdf({path:output+'/flush-wallet-collage.pdf',width:'2700px',height:(await sheet.evaluate(()=>document.documentElement.scrollHeight))+'px',printBackground:true,margin:{top:0,right:0,bottom:0,left:0}});
  console.log(`Captured ${frames.length} actual extension screens with offline fixtures.`);
- console.log('Collage: docs/demo/flush-wallet-collage.png');console.log('Interactive gallery: docs/demo/gallery.html');
+ console.log('Collage: output/demo/flush-wallet-collage.png');console.log('Interactive gallery: output/demo/gallery.html');
 }finally{await browser.close();await rm(profile,{recursive:true,force:true});}

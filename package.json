@@ -1,6 +1,6 @@
 {
   "name": "flush-browser-wallet",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -19,7 +19,8 @@
     "test:qa:lifecycle": "node test/wallet-qa-lifecycle.mjs",
     "test:qa:balances": "node test/wallet-qa-balances.mjs",
     "test:explorer": "node test/public-explorer.mjs",
-    "report:qa": "node scripts/qa-report.mjs"
+    "report:qa": "node scripts/qa-report.mjs",
+    "package": "npm run build && node scripts/package.mjs"
   },
   "dependencies": {
     "@noble/curves": "^2.0.1",

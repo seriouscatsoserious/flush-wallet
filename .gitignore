@@ -15,3 +15,6 @@ test/node-integration.mjs
 *.cookie
 *.log
 .DS_Store
+.extension-build-*/
+docs/demo/
+docs/test/

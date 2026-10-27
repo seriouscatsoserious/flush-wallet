@@ -1,7 +1,7 @@
-Flush Wallet 0.3.1 — Chrome extension, betanet preview
+Flush Wallet 0.3.2 — Chrome extension, betanet preview
 
 INSTALL
-1. Extract flush-wallet.zip.
+1. Extract flush-wallet-0.3.2.zip.
 2. Open chrome://extensions and enable Developer mode.
 3. Choose Load unpacked and select the extracted flush-wallet folder.
 4. Pin Flush Wallet, then create or import a recovery phrase.
@@ -58,16 +58,6 @@ guessed from a transaction's marker. Ordinary ECX sends remain available.
 Temporary betanet, slot 99. Mainnet, asset creation, liquidity management,
 auctions, staking and peg-out transactions are not enabled. Funded live-chain
 transfers have not been broadcast in validation.
-
-DEVELOPMENT
-npm ci
-npm run build
-npm test
-npm run test:browser
-node test/advanced-browser.mjs
-
-The advanced browser test uses in-process RPC fixtures, not a live server.
-No node/API service is started or required by the build or browser tests.
 
 Design: block-fabric/flush-markets docs/design.md and app.css; official Flush
 mark. Barlow and JetBrains Mono fonts are bundled under SIL OFL licences.

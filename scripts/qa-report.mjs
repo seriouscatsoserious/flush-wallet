@@ -1,6 +1,6 @@
 import {readFile,writeFile,mkdir,copyFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
-const directory='docs/test/qa';await mkdir(directory,{recursive:true});
+const directory='output/qa-report';await mkdir(directory,{recursive:true});
 assert(!(await readFile((process.env.FLUSH_PLAYGROUND_DIR||'runtime/regtest-playground')+'/pids','utf8').catch(()=>'' )).trim(),'Stop the temporary playground before publishing its report');
 const sources=[
  ['wallet-qa','Recovery, transfers and deposits','Real local nodes'],
